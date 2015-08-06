@@ -1237,7 +1237,8 @@ namespace SynapticEffect.Forms
             timerTxt.Interval = 1000;
             timerTxt.Enabled = false;
             timerTxt.Tick += timerTxt_Tick;
-             
+
+            currentTime = DateTime.Now;
             // Use reflection to load the
             // embedded bitmaps for the
             // styles plus and minus icons
@@ -1416,7 +1417,11 @@ namespace SynapticEffect.Forms
         public CalendarViewModel CalendarViewMode
         {
             get { return calendarViewMode; }
-            set { calendarViewMode = value; }
+            set
+            {
+                calendarViewMode = value;
+                LoadCalendarView(); 
+            }
         }
 
 		#endregion
@@ -1618,7 +1623,7 @@ namespace SynapticEffect.Forms
 			base.OnResize(e);
 
             HideTxtBox();
-            RefreshView();
+            RefreshCalendarView();
 		}
 
 
@@ -1937,7 +1942,6 @@ namespace SynapticEffect.Forms
             if(calendarViewMode== CalendarViewModel.Month)
             {
                 colCount = 7;
-                lfWidth = 0;
                 itemwidth = r.Width / colCount;
                 itemheight = (r.Height - headerBuffer) / 5;
                 for (i = 0; i < nodes.Count; i++)
@@ -1963,7 +1967,6 @@ namespace SynapticEffect.Forms
                 {
                     colCount = 1;
                 }
-                lfWidth = 60;
                 itemwidth = (r.Width - lfWidth - vsize) / colCount;
                 itemheight = 20;
                 ltHeight = 0;
@@ -2026,7 +2029,6 @@ namespace SynapticEffect.Forms
             else if(calendarViewMode== CalendarViewModel.Year)
             {
                 colCount = 37;
-                lfWidth = 52;
                 itemwidth = (r.Width - lfWidth) / colCount;
                  
                 itemheight = (r.Height - headerBuffer) / 12;
@@ -2044,9 +2046,8 @@ namespace SynapticEffect.Forms
             else if(calendarViewMode == CalendarViewModel.TimeSpan)
             {
                 colCount = nodes.Count;
-                lfWidth = 0;
-                ltHeight = 35;
 
+                ltHeight = 35;
                 itemwidth = 25;
                 itemheight = r.Height - headerBuffer - ltHeight;
                 //绘制时间条标题
@@ -2518,17 +2519,20 @@ namespace SynapticEffect.Forms
             }
         }
 
-        public void LoadCalendar()
+        public void GotoCalendarDate(DateTime dt)
         {
-            int a = itemheight;
-            currentTime = DateTime.Now;
+            currentTime = dt;
+            LoadCalendarView(); 
+        }
 
+        private void LoadCalendarView()
+        {
             switch (calendarViewMode)
-            { 
+            {
                 case CalendarViewModel.Month:
                     LoadCalendarMonthView();
                     break;
-                case  CalendarViewModel.Week:
+                case CalendarViewModel.Week:
                     LoadCalendarWeekView(7);
                     break;
                 case CalendarViewModel.WorkWeek:
@@ -2541,206 +2545,18 @@ namespace SynapticEffect.Forms
                     LoadCalendarYearView();
                     break;
                 case CalendarViewModel.TimeSpan:
-                    currentTime=new DateTime(currentTime.Year ,currentTime.Month,currentTime.Day,0,0,0);
+                    currentTime = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, 0, 0, 0);
                     LoadCalendarTimeSpanView();
                     break;
             }
             AdjustScrollbars();
             Invalidate();
-        } 
-
-        private void LoadCalendarMonthView()
-        {
-            int year = currentTime.Year;
-            int month = currentTime.Month;
-
-            nodes.Clear(); 
-            int nowMonthDays = System.Threading.Thread.CurrentThread.CurrentUICulture.Calendar.GetDaysInMonth(year, month);
-             
-            for (int i = 1; i <= nowMonthDays; i++)
-            {
-                TreeListNode dtNode = new TreeListNode(new DateTime(year, month, i,0,0,0));
-                nodes.Add(dtNode);
-            }
-            int firstDayWeek = nodes[0].Week;
-            int lastDayWeek = nodes[nowMonthDays - 1].Week;
-            //第一周的天数
-            if (firstDayWeek != 0)
-            {
-                for (int i = 0; i < firstDayWeek; i++)
-                {
-                    DateTime dtLastMonthFirst = nodes[0].Date.AddDays(-1);
-                    TreeListNode dtNode = new TreeListNode(dtLastMonthFirst);
-                    dtNode.BackColor = Color.LightYellow;
-                    nodes.Insert(0, dtNode);
-                }
-            }
-            //最后一周的天数
-            if (lastDayWeek != 6)
-            {
-                for (int i = lastDayWeek + 1; i < 7; i++)
-                {
-                    DateTime dtLastMonthDay = nodes[nodes.Count - 1].Date.AddDays(1);
-                    TreeListNode dtNode = new TreeListNode(dtLastMonthDay); 
-                    dtNode.BackColor = Color.LightYellow;
-                    nodes.Add(dtNode);
-                }
-            }
-            for (int i = 0; i < nodes.Count; i++)
-            {
-                int row = i / 7;
-                int col = i % 7;
-                nodes[i].Row = row;
-                nodes[i].Col = col;
-            }
-            BindTaskToNode();
-            Invalidate();
-
         }
-        private void LoadCalendarWeekView(int dayCount)
+
+        private void RefreshCalendarView()
         { 
-            DateTime startWeekDay = currentTime.AddDays(1 - Convert.ToInt32(currentTime.DayOfWeek.ToString("d")));
-            DateTime endWeekDay = startWeekDay.AddDays(dayCount);
-            int week = GetWeekOfYear(currentTime);
-
-            nodes.Clear();
-            int i = 0;
-            for (i = 0; i < dayCount; i++)
-            {
-                DateTime dt = startWeekDay.AddDays(i);
-                for(int j=0;j<24;j++)
-                { 
-                    TreeListNode dtNode1 = new TreeListNode(new DateTime(dt.Year, dt.Month, dt.Day,j,0,0));
-                    dtNode1.Row = j * 2;
-                    dtNode1.Col = i;
-                    nodes.Add(dtNode1);
-                    TreeListNode dtNode2 = new TreeListNode(new DateTime(dt.Year, dt.Month, dt.Day, j, 30, 0));
-                    dtNode2.Row = j * 2+1;
-                    dtNode2.Col = i;
-                    nodes.Add(dtNode2); 
-                }
-            } 
-            BindTaskToNode();
-            RefreshTaskEvent();
-            Invalidate();
-
-        }
-
-        private void LoadCalendarDayView()
-        { 
-            int week = GetWeekOfYear(currentTime); 
-            nodes.Clear();
-            int i = 0;
-            DateTime dt = currentTime;
-            for (int j = 0; j < 24; j++)
-            {
-                TreeListNode dtNode1 = new TreeListNode(new DateTime(dt.Year, dt.Month, dt.Day, j, 0, 0));
-                dtNode1.Row = j * 2;
-                dtNode1.Col = i;
-                nodes.Add(dtNode1);
-                TreeListNode dtNode2 = new TreeListNode(new DateTime(dt.Year, dt.Month, dt.Day, j, 30, 0));
-                dtNode2.Row = j * 2 + 1;
-                dtNode2.Col = i;
-                nodes.Add(dtNode2);
-            }
-            BindTaskToNode();
-            Invalidate();
-        }
-
-
-        private void LoadCalendarYearView()
-        {
-            int year = currentTime.Year;
-
-            int nowYearsDay = System.Threading.Thread.CurrentThread.CurrentUICulture.Calendar.GetDaysInYear(year);
-
-            nodes.Clear();
-
-            int startIndex = 0;
-            for (int m = 1; m <= 12;m++ )
-            {
-                int month = m;
-                int nowMonthDays = System.Threading.Thread.CurrentThread.CurrentUICulture.Calendar.GetDaysInMonth(year, month);
-
-                for (int i = 1; i <= nowMonthDays; i++)
-                {
-                    TreeListNode dtNode = new TreeListNode(new DateTime(year, month, i, 0, 0, 0));
-                    nodes.Add(dtNode);
-                }
-
-                int firstDayWeek = nodes[startIndex].Week;
-                int lastDayWeek = nodes[nowMonthDays - 1].Week;
-
-                if(firstDayWeek!=0)
-                {
-                    for (int i = 0; i < firstDayWeek; i++)
-                    {
-                        DateTime dtLastMonthFirst = nodes[startIndex].Date.AddDays(-1);
-                        TreeListNode dtNode = new TreeListNode(dtLastMonthFirst);
-                        dtNode.IsBlankNode = true;
-                        dtNode.BackColor = Color.LightGray;
-                        nodes.Insert(startIndex, dtNode);
-                    }
-                }
-                int monthNodeCount = nodes.Count - startIndex;
-                if(monthNodeCount<37)
-                { 
-                    for(int i=0;i<37-monthNodeCount;i++)
-                    { 
-                        DateTime dtLastMonthDay = nodes[nodes.Count - 1].Date.AddDays(1);
-                        TreeListNode dtNode = new TreeListNode(dtLastMonthDay);
-                        dtNode.IsBlankNode = true;
-                        dtNode.BackColor = Color.LightGray;
-                        nodes.Add(dtNode);
-                    }
-                }
-                startIndex = nodes.Count;
-            }
-                
-            for (int i = 0; i < nodes.Count; i++)
-            {
-                int row = i / 37;
-                int col = i % 37;
-                nodes[i].Row = row;
-                nodes[i].Col = col;
-            }
-            BindTaskToNode();
-            Invalidate();
-        }
-
-        private void LoadCalendarTimeSpanView()
-        {
-            itemwidth = 25;
-            int nodeCount = this.Width / itemwidth+2;
-             
-            DateTime dtStart = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, currentTime.Hour, currentTime.Minute, currentTime.Second);
-            nodes.Clear();
-            for (int i = 0; i < nodeCount; i++)
-            {
-                DateTime dt = dtStart.AddMinutes(30 * i);
-                TreeListNode dtNode = new TreeListNode(dt);
-                if((dt.Hour==23 && dt.Minute==30) || (dt.Hour==0 && dt.Minute==0))
-                {
-                    dtNode.BackColor = Color.LightYellow;
-                }
-                nodes.Add(dtNode);
-            }
-           
-            for (int i = 0; i < nodes.Count; i++)
-            {
-                nodes[i].Row = 0;
-                nodes[i].Col = i;
-            }
-            BindTaskToNode();
-            Invalidate();
-        }
-
-
-
-        private void RefreshView()
-        {
             switch (calendarViewMode)
-            {
+            { 
                 case CalendarViewModel.TimeSpan:
                     LoadCalendarTimeSpanView();
                     break;
@@ -2811,6 +2627,197 @@ namespace SynapticEffect.Forms
                     break;
             }
         }
+
+        private void LoadCalendarMonthView()
+        {
+            int year = currentTime.Year;
+            int month = currentTime.Month;
+
+            lfWidth = 0;
+            nodes.Clear(); 
+            int nowMonthDays = System.Threading.Thread.CurrentThread.CurrentUICulture.Calendar.GetDaysInMonth(year, month);
+             
+            for (int i = 1; i <= nowMonthDays; i++)
+            {
+                TreeListNode dtNode = new TreeListNode(new DateTime(year, month, i,0,0,0));
+                nodes.Add(dtNode);
+            }
+            int firstDayWeek = nodes[0].Week;
+            int lastDayWeek = nodes[nowMonthDays - 1].Week;
+            //第一周的天数
+            if (firstDayWeek != 0)
+            {
+                for (int i = 0; i < firstDayWeek; i++)
+                {
+                    DateTime dtLastMonthFirst = nodes[0].Date.AddDays(-1);
+                    TreeListNode dtNode = new TreeListNode(dtLastMonthFirst);
+                    dtNode.BackColor = Color.LightYellow;
+                    nodes.Insert(0, dtNode);
+                }
+            }
+            //最后一周的天数
+            if (lastDayWeek != 6)
+            {
+                for (int i = lastDayWeek + 1; i < 7; i++)
+                {
+                    DateTime dtLastMonthDay = nodes[nodes.Count - 1].Date.AddDays(1);
+                    TreeListNode dtNode = new TreeListNode(dtLastMonthDay); 
+                    dtNode.BackColor = Color.LightYellow;
+                    nodes.Add(dtNode);
+                }
+            }
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                int row = i / 7;
+                int col = i % 7;
+                nodes[i].Row = row;
+                nodes[i].Col = col;
+            }
+            BindTaskToNode();
+            Invalidate();
+
+        }
+        private void LoadCalendarWeekView(int dayCount)
+        { 
+            DateTime startWeekDay = currentTime.AddDays(1 - Convert.ToInt32(currentTime.DayOfWeek.ToString("d")));
+            DateTime endWeekDay = startWeekDay.AddDays(dayCount);
+            int week = GetWeekOfYear(currentTime);
+
+            lfWidth = 60;
+            nodes.Clear();
+            int i = 0;
+            for (i = 0; i < dayCount; i++)
+            {
+                DateTime dt = startWeekDay.AddDays(i);
+                for(int j=0;j<24;j++)
+                { 
+                    TreeListNode dtNode1 = new TreeListNode(new DateTime(dt.Year, dt.Month, dt.Day,j,0,0));
+                    dtNode1.Row = j * 2;
+                    dtNode1.Col = i;
+                    nodes.Add(dtNode1);
+                    TreeListNode dtNode2 = new TreeListNode(new DateTime(dt.Year, dt.Month, dt.Day, j, 30, 0));
+                    dtNode2.Row = j * 2+1;
+                    dtNode2.Col = i;
+                    nodes.Add(dtNode2); 
+                }
+            } 
+            BindTaskToNode();
+            RefreshTaskEvent();
+            Invalidate();
+
+        }
+
+        private void LoadCalendarDayView()
+        { 
+            int week = GetWeekOfYear(currentTime); 
+            nodes.Clear();
+            int i = 0;
+            DateTime dt = currentTime;
+            for (int j = 0; j < 24; j++)
+            {
+                TreeListNode dtNode1 = new TreeListNode(new DateTime(dt.Year, dt.Month, dt.Day, j, 0, 0));
+                dtNode1.Row = j * 2;
+                dtNode1.Col = i;
+                nodes.Add(dtNode1);
+                TreeListNode dtNode2 = new TreeListNode(new DateTime(dt.Year, dt.Month, dt.Day, j, 30, 0));
+                dtNode2.Row = j * 2 + 1;
+                dtNode2.Col = i;
+                nodes.Add(dtNode2);
+            }
+            BindTaskToNode();
+            Invalidate();
+        }
+         
+        private void LoadCalendarYearView()
+        {
+            int year = currentTime.Year;
+
+            int nowYearsDay = System.Threading.Thread.CurrentThread.CurrentUICulture.Calendar.GetDaysInYear(year);
+
+            lfWidth = 52;
+            nodes.Clear();
+
+            int startIndex = 0;
+            for (int m = 1; m <= 12;m++ )
+            {
+                int month = m;
+                int nowMonthDays = System.Threading.Thread.CurrentThread.CurrentUICulture.Calendar.GetDaysInMonth(year, month);
+
+                for (int i = 1; i <= nowMonthDays; i++)
+                {
+                    TreeListNode dtNode = new TreeListNode(new DateTime(year, month, i, 0, 0, 0));
+                    nodes.Add(dtNode);
+                }
+
+                int firstDayWeek = nodes[startIndex].Week;
+                int lastDayWeek = nodes[nowMonthDays - 1].Week;
+
+                if(firstDayWeek!=0)
+                {
+                    for (int i = 0; i < firstDayWeek; i++)
+                    {
+                        DateTime dtLastMonthFirst = nodes[startIndex].Date.AddDays(-1);
+                        TreeListNode dtNode = new TreeListNode(dtLastMonthFirst);
+                        dtNode.IsBlankNode = true;
+                        dtNode.BackColor = Color.LightGray;
+                        nodes.Insert(startIndex, dtNode);
+                    }
+                }
+                int monthNodeCount = nodes.Count - startIndex;
+                if(monthNodeCount<37)
+                { 
+                    for(int i=0;i<37-monthNodeCount;i++)
+                    { 
+                        DateTime dtLastMonthDay = nodes[nodes.Count - 1].Date.AddDays(1);
+                        TreeListNode dtNode = new TreeListNode(dtLastMonthDay);
+                        dtNode.IsBlankNode = true;
+                        dtNode.BackColor = Color.LightGray;
+                        nodes.Add(dtNode);
+                    }
+                }
+                startIndex = nodes.Count;
+            }
+                
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                int row = i / 37;
+                int col = i % 37;
+                nodes[i].Row = row;
+                nodes[i].Col = col;
+            }
+            BindTaskToNode();
+            Invalidate();
+        }
+
+        private void LoadCalendarTimeSpanView()
+        {
+            itemwidth = 25;
+            int nodeCount = this.Width / itemwidth+2;
+             
+            DateTime dtStart = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, currentTime.Hour, currentTime.Minute, currentTime.Second);
+
+            lfWidth = 0;
+            nodes.Clear();
+            for (int i = 0; i < nodeCount; i++)
+            {
+                DateTime dt = dtStart.AddMinutes(30 * i);
+                TreeListNode dtNode = new TreeListNode(dt);
+                if((dt.Hour==23 && dt.Minute==30) || (dt.Hour==0 && dt.Minute==0))
+                {
+                    dtNode.BackColor = Color.LightYellow;
+                }
+                nodes.Add(dtNode);
+            }
+           
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                nodes[i].Row = 0;
+                nodes[i].Col = i;
+            }
+            BindTaskToNode();
+            Invalidate();
+        }
+          
 
         private void RefreshTaskEvent()
         {
@@ -3029,7 +3036,14 @@ namespace SynapticEffect.Forms
                 //    hscrollBar.Value = 0;
                 //    hsize = 0;
                 //}
-            } 
+            }
+            else
+            {
+
+                vscrollBar.Hide();
+                vscrollBar.Value = 0;
+                vsize = 0;
+            }
         }
 
 		private void UnfocusNodes(TreeListNodeCollection nodecol)

@@ -15,7 +15,7 @@ namespace WindowsFormsApplication1
         public Form1()
         {
             InitializeComponent();
-            this.calendarView1.CalendarViewMode = CalendarViewModel.WorkWeek;
+            this.calendarView1.CalendarViewMode = CalendarViewModel.Week;
             this.calendarView1.TaskMouseClick += calendarView1_TaskMouseClick;
         }
 
@@ -28,11 +28,7 @@ namespace WindowsFormsApplication1
         int month = 7;
         private void Form1_Load(object sender, EventArgs e)
         {
-            month = DateTime.Now.Month;
-            this.calendarView1.LoadCalendar();
-
-
-
+            month = DateTime.Now.Month;  
             TaskEventNode taskEvent01 = new TaskEventNode("日历控件跨区域显示测试1", "完成日历控件", "公司", new DateTime(2015, 7, 30, 8, 30, 0), new DateTime(2015, 7, 30, 18, 0, 0));
             this.calendarView1.AddTask(taskEvent01);
 
@@ -78,23 +74,50 @@ namespace WindowsFormsApplication1
 
             //TaskEventNode taskEvent5 = new TaskEventNode("日历控件跨区域显示测试", "完成日历控件", "公司", new DateTime(2015, 7, 25, 8, 30, 0), new DateTime(2015, 7, 30, 18, 0, 0));
             //this.calendarView1.AddTask(taskEvent5);
-
-            this.toolStripLabel1.Text = month.ToString();
+             
         }
 
         private void toolStripButton1_Click(object sender, EventArgs e)
         {
             month--;
-            this.calendarView1.PreView();
-            this.toolStripLabel1.Text = month.ToString();
+            this.calendarView1.PreView(); 
         }
 
         private void toolStripButton2_Click(object sender, EventArgs e)
         {
             month++;
-            this.calendarView1.NextView();
-            this.toolStripLabel1.Text = month.ToString();
+            this.calendarView1.NextView(); 
 
+        }
+
+        private void toolStripButton3_Click(object sender, EventArgs e)
+        { 
+            this.calendarView1.CalendarViewMode = CalendarViewModel.Day;
+        }
+
+        private void toolStripButton7_Click(object sender, EventArgs e)
+        {
+            this.calendarView1.CalendarViewMode = CalendarViewModel.Week; 
+        }
+
+        private void toolStripButton6_Click(object sender, EventArgs e)
+        { 
+            this.calendarView1.CalendarViewMode = CalendarViewModel.WorkWeek;
+        }
+
+        private void toolStripButton5_Click(object sender, EventArgs e)
+        { 
+            this.calendarView1.CalendarViewMode = CalendarViewModel.Month;
+        }
+
+        private void toolStripButton4_Click(object sender, EventArgs e)
+        { 
+            this.calendarView1.CalendarViewMode = CalendarViewModel.Year;
+        }
+
+        private void toolStripButton8_Click(object sender, EventArgs e)
+        {
+            this.calendarView1.CalendarViewMode = CalendarViewModel.TimeSpan; 
         }
     }
 }

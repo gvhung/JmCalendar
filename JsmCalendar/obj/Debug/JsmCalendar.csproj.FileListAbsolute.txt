@@ -6,3 +6,11 @@ D:\Jsm控件\JsmCalendar\JsmCalendar\JsmCalendar\bin\Debug\JsmCalendar.pdb
 D:\Jsm控件\JsmCalendar\JsmCalendar\JsmCalendar\obj\Debug\JsmCalendar.dll
 D:\Jsm控件\JsmCalendar\JsmCalendar\JsmCalendar\obj\Debug\JsmCalendar.pdb
 D:\Jsm控件\JsmCalendar\JsmCalendar\JsmCalendar\obj\Debug\SynapticEffect.Forms.ChineseDate.resources
+D:\开发库\ShareProject\JmCalendar\JsmCalendar\bin\Debug\JsmCalendar.dll
+D:\开发库\ShareProject\JmCalendar\JsmCalendar\bin\Debug\JsmCalendar.pdb
+D:\开发库\ShareProject\JmCalendar\JsmCalendar\obj\Debug\JsmCalendar.csprojResolveAssemblyReference.cache
+D:\开发库\ShareProject\JmCalendar\JsmCalendar\obj\Debug\SynapticEffect.Forms.ItemsChangedEventArgs.resources
+D:\开发库\ShareProject\JmCalendar\JsmCalendar\obj\Debug\SynapticEffect.Forms.ChineseDate.resources
+D:\开发库\ShareProject\JmCalendar\JsmCalendar\obj\Debug\JsmCalendar.csproj.GenerateResource.Cache
+D:\开发库\ShareProject\JmCalendar\JsmCalendar\obj\Debug\JsmCalendar.dll
+D:\开发库\ShareProject\JmCalendar\JsmCalendar\obj\Debug\JsmCalendar.pdb
