@@ -1,0 +1,8 @@
+D:\Jsm控件\JsmCalendar\JsmCalendar\JsmCalendar\obj\Debug\JsmCalendar.csprojResolveAssemblyReference.cache
+D:\Jsm控件\JsmCalendar\JsmCalendar\JsmCalendar\obj\Debug\SynapticEffect.Forms.ItemsChangedEventArgs.resources
+D:\Jsm控件\JsmCalendar\JsmCalendar\JsmCalendar\obj\Debug\JsmCalendar.csproj.GenerateResource.Cache
+D:\Jsm控件\JsmCalendar\JsmCalendar\JsmCalendar\bin\Debug\JsmCalendar.dll
+D:\Jsm控件\JsmCalendar\JsmCalendar\JsmCalendar\bin\Debug\JsmCalendar.pdb
+D:\Jsm控件\JsmCalendar\JsmCalendar\JsmCalendar\obj\Debug\JsmCalendar.dll
+D:\Jsm控件\JsmCalendar\JsmCalendar\JsmCalendar\obj\Debug\JsmCalendar.pdb
+D:\Jsm控件\JsmCalendar\JsmCalendar\JsmCalendar\obj\Debug\SynapticEffect.Forms.ChineseDate.resources
