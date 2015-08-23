@@ -224,6 +224,8 @@ namespace JsmCalendar
     [Serializable]
     public class TaskEventNode :IComparable
     {
+        public object tag=null;
+
         private string title = "";
 
         public string Title
@@ -1160,6 +1162,9 @@ namespace JsmCalendar
 
         [Description("Occurs after the taskEvent is click")]
         public event CalendarTaskEventHandler TaskMouseClick;
+         
+        [Description("Occurs after the taskEvent is  double click")]
+        public event CalendarTaskEventHandler TaskDoubleClick;
 		#endregion
 
 		#region Variables
@@ -1204,6 +1209,9 @@ namespace JsmCalendar
 
         private DateTime currentTime=DateTime.Now;
         private CalendarViewModel calendarViewMode= CalendarViewModel.Month;
+
+        private DateTime minTime = DateTime.Now; 
+        private DateTime maxTime = DateTime.Now; 
 
         TextBox txtNode = null;
         System.Windows.Forms.Timer timerTxt;
@@ -1423,6 +1431,17 @@ namespace JsmCalendar
                 calendarViewMode = value;
                 LoadCalendarView(); 
             }
+        }
+
+        public DateTime MinTime
+        {
+            get { return minTime; }
+            set { minTime = value; }
+        }
+        public DateTime MaxTime
+        {
+            get { return maxTime; }
+            set { maxTime = value; }
         }
 
 		#endregion
@@ -1754,7 +1773,7 @@ namespace JsmCalendar
 			base.OnMouseDown(e);
 
             HideTxtBox();
-
+             
             if (e.Button == MouseButtons.Left)
             {
                 if (e.Y > headerBuffer +ltHeight) //点击日历区域
@@ -1808,24 +1827,33 @@ namespace JsmCalendar
                 {
                     taskNode.Selected = true;
                     this.selectedTask = taskNode;
-                    //添加任务事件被选中事件
-                    if (TaskMouseClick != null)
+                    if(e.Clicks==2)
                     {
-                        TaskMouseClick(this, taskNode);
-                    }
-
-                    //显示textBox 
-                    TaskEventNode taskInTitle = taskTitleInTaskRow(e);
-                    if (taskInTitle != null)
-                    {
-                        Rectangle rc = titleRectInTaskRow(e);
-                        if (rc.Width != 0)
+                        if(TaskDoubleClick!=null)
                         {
-                            taskInTitle.SelectedTitleArea = rc;
+                            TaskDoubleClick(this, taskNode);
                         }
-                        txtNode.Tag = taskNode;
-                        timerTxt.Enabled = true;
                     }
+                    else
+                    {
+                        //添加任务事件被选中事件
+                        if (TaskMouseClick != null)
+                        {
+                            TaskMouseClick(this, taskNode);
+                        }
+                        //显示textBox 
+                        TaskEventNode taskInTitle = taskTitleInTaskRow(e);
+                        if (taskInTitle != null)
+                        {
+                            Rectangle rc = titleRectInTaskRow(e);
+                            if (rc.Width != 0)
+                            {
+                                taskInTitle.SelectedTitleArea = rc;
+                            }
+                            txtNode.Tag = taskNode;
+                            timerTxt.Enabled = true;
+                        }
+                    } 
                 }
               
                 Invalidate();
@@ -2693,6 +2721,10 @@ namespace JsmCalendar
             }
             BindTaskToNode();   
             Invalidate();
+             
+            //日历当前视图时间
+            minTime = nodes[0].Date;
+            maxTime = nodes[nodes.Count - 1].Date;
 
         }
         private void LoadCalendarWeekView(int dayCount)
@@ -2720,8 +2752,12 @@ namespace JsmCalendar
                 }
             } 
             BindTaskToNode();
-            RefreshTaskEvent(); 
+            RefreshTaskEvent();
             Invalidate();
+
+            //日历当前视图时间
+            minTime = nodes[0].Date;
+            maxTime = nodes[nodes.Count - 1].Date;
 
         }
 
@@ -2745,8 +2781,12 @@ namespace JsmCalendar
                 dtNode2.Col = i;
                 nodes.Add(dtNode2);
             }
-            BindTaskToNode(); 
+            BindTaskToNode();
             Invalidate();
+
+            //日历当前视图时间
+            minTime = nodes[0].Date;
+            maxTime = nodes[nodes.Count - 1].Date;
         }
          
         private void LoadCalendarYearView()
@@ -2806,8 +2846,12 @@ namespace JsmCalendar
                 nodes[i].Row = row;
                 nodes[i].Col = col;
             }
-            BindTaskToNode(); 
+            BindTaskToNode();
             Invalidate();
+
+            //日历当前视图时间
+            minTime = nodes[0].Date;
+            maxTime = nodes[nodes.Count - 1].Date;
         }
 
         private void LoadCalendarTimeSpanView()
@@ -2837,6 +2881,10 @@ namespace JsmCalendar
             }
             BindTaskToNode();
             Invalidate();
+
+            //日历当前视图时间
+            minTime = nodes[0].Date;
+            maxTime = nodes[nodes.Count - 1].Date;
         }
           
 
