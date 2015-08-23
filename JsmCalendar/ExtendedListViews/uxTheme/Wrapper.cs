@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace SynapticEffect.Forms.uxTheme
+namespace JsmCalendar.uxTheme
 {
 	public class Wrapper
 	{

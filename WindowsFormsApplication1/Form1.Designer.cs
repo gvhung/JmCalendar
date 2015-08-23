@@ -33,7 +33,7 @@
             this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
             this.toolStripButton2 = new System.Windows.Forms.ToolStripButton();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.calendarView1 = new SynapticEffect.Forms.CalendarView();
+            this.calendarView1 = new JsmCalendar.CalendarView();
             this.toolStripButton3 = new System.Windows.Forms.ToolStripButton();
             this.toolStripButton4 = new System.Windows.Forms.ToolStripButton();
             this.toolStripButton5 = new System.Windows.Forms.ToolStripButton();
@@ -96,7 +96,7 @@
             // 
             this.calendarView1.BackColor = System.Drawing.SystemColors.Window;
             this.calendarView1.BCompareSort = false;
-            this.calendarView1.CalendarViewMode = SynapticEffect.Forms.CalendarViewModel.Month;
+            this.calendarView1.CalendarViewMode = JsmCalendar.CalendarViewModel.Month;
             this.calendarView1.ColumnSortColor = System.Drawing.Color.Gainsboro;
             this.calendarView1.ColumnTrackColor = System.Drawing.Color.WhiteSmoke;
             this.calendarView1.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -206,7 +206,7 @@
 
         #endregion
 
-        private SynapticEffect.Forms.CalendarView calendarView1;
+        private JsmCalendar.CalendarView calendarView1;
         private System.Windows.Forms.ToolStrip toolStrip1;
         private System.Windows.Forms.ToolStripButton toolStripButton1;
         private System.Windows.Forms.ToolStripButton toolStripButton2;

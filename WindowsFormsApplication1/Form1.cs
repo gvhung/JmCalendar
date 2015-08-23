@@ -1,4 +1,4 @@
-﻿using SynapticEffect.Forms;
+﻿using JsmCalendar;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -15,7 +15,7 @@ namespace WindowsFormsApplication1
         public Form1()
         {
             InitializeComponent();
-            this.calendarView1.CalendarViewMode = CalendarViewModel.Week;
+            this.calendarView1.CalendarViewMode = CalendarViewModel.TimeSpan;
             this.calendarView1.TaskMouseClick += calendarView1_TaskMouseClick;
         }
 

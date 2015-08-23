@@ -1,6 +1,6 @@
 using System;
 
-namespace SynapticEffect.Forms
+namespace JsmCalendar
 {
 	/// <summary>
 	/// IParentChildList provides functions to navigate a mutliply-linked

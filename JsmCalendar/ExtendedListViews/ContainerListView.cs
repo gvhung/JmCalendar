@@ -25,7 +25,7 @@ using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 
-namespace SynapticEffect.Forms
+namespace JsmCalendar
 {
 
 	public enum WinMsg
@@ -93,7 +93,7 @@ namespace SynapticEffect.Forms
 	#endregion
 
 	#region ContainerListViewItem classes
-	[DesignTimeVisible(false), TypeConverter("SynapticEffect.Forms.ListViewItemConverter")]
+	[DesignTimeVisible(false), TypeConverter("JsmCalendar.ListViewItemConverter")]
 	public class ContainerListViewItem: ICloneable
 	{
 		public event MouseEventHandler MouseDown;
@@ -339,7 +339,7 @@ namespace SynapticEffect.Forms
 	#endregion
 
 	#region ContainerSubListViewItem classes
-	[DesignTimeVisible(false), TypeConverter("SynapticEffect.Forms.SubListViewItemConverter")]
+	[DesignTimeVisible(false), TypeConverter("JsmCalendar.SubListViewItemConverter")]
 	public class ContainerSubListViewItem: ICloneable
 	{
 		public event MouseEventHandler MouseDown;
@@ -498,7 +498,7 @@ namespace SynapticEffect.Forms
 	#endregion
 
 	#region Column Header classes
-	[DesignTimeVisible(false), TypeConverter("SynapticEffect.Forms.ToggleColumnHeaderConverter")]
+	[DesignTimeVisible(false), TypeConverter("JsmCalendar.ToggleColumnHeaderConverter")]
 	public class ToggleColumnHeader: ICloneable
 	{
 		// send an internal event when a column is resized
@@ -666,7 +666,7 @@ namespace SynapticEffect.Forms
 			}
 		}
 
-		public virtual int Add(SynapticEffect.Forms.ToggleColumnHeader colhead)
+		public virtual int Add(JsmCalendar.ToggleColumnHeader colhead)
 		{
 			colhead.WidthResized += new EventHandler(OnWidthResized);
 			return colhead.Index = List.Add(colhead);
@@ -687,7 +687,7 @@ namespace SynapticEffect.Forms
 			return tch;
 		}
 
-		public virtual void AddRange(SynapticEffect.Forms.ToggleColumnHeader[] items)
+		public virtual void AddRange(JsmCalendar.ToggleColumnHeader[] items)
 		{
 			lock(List.SyncRoot)
 			{
@@ -879,7 +879,7 @@ namespace SynapticEffect.Forms
 		protected bool allowColumnReorder = false;
 		protected BorderStyle borderstyle = BorderStyle.Fixed3D;
 		private int borderWid = 2;
-		protected SynapticEffect.Forms.ColumnHeaderCollection columns;			
+		protected JsmCalendar.ColumnHeaderCollection columns;			
 		protected ColumnHeaderStyle headerStyle = ColumnHeaderStyle.Nonclickable;
 		protected int headerBuffer = 62;
 
@@ -902,7 +902,7 @@ namespace SynapticEffect.Forms
 
 		protected bool visualStyles = false;
 
-		protected SynapticEffect.Forms.ContainerListViewItem focusedItem;	
+		protected JsmCalendar.ContainerListViewItem focusedItem;	
 		protected int focusedIndex = -1;
 		protected bool isFocused = false;
 
@@ -978,7 +978,7 @@ namespace SynapticEffect.Forms
 
 			this.BackColor = SystemColors.Window;
 
-			columns = new SynapticEffect.Forms.ColumnHeaderCollection();
+			columns = new JsmCalendar.ColumnHeaderCollection();
 			items = new ContainerListViewItemCollection();
 			selectedIndices = new ArrayList();
 			selectedItems = new ContainerListViewItemCollection();
@@ -1063,7 +1063,7 @@ namespace SynapticEffect.Forms
 		DesignerSerializationVisibility(DesignerSerializationVisibility.Content),
 		Editor(typeof(CollectionEditor), typeof(UITypeEditor))
 		]
-		public SynapticEffect.Forms.ColumnHeaderCollection Columns
+		public JsmCalendar.ColumnHeaderCollection Columns
 		{
 			get { return columns; }
 		}
@@ -1391,7 +1391,7 @@ namespace SynapticEffect.Forms
 				bool val;
 				try
 				{
-					val = visualStyles && SynapticEffect.Forms.uxTheme.Wrapper.IsAppThemed();
+					val = visualStyles && JsmCalendar.uxTheme.Wrapper.IsAppThemed();
 				}
 				catch
 				{
@@ -2596,17 +2596,17 @@ namespace SynapticEffect.Forms
 					{
 						colwid = (columns[i].ScaleStyle == ColumnScaleStyle.Spring ? springWid : columns[i].Width);
 						if (headerStyle == ColumnHeaderStyle.Clickable && columns[i].Pressed)
-							SynapticEffect.Forms.uxTheme.Wrapper.DrawBackground("HEADER", "HEADERITEM", "PRESSED", hdc,
+							JsmCalendar.uxTheme.Wrapper.DrawBackground("HEADER", "HEADERITEM", "PRESSED", hdc,
 								lp_scr+last, tp, 
 								colwid, headerBuffer,
 								lp, tp, r.Width-6, headerBuffer);
 						else if (headerStyle != ColumnHeaderStyle.None && columns[i].Hovered)
-							SynapticEffect.Forms.uxTheme.Wrapper.DrawBackground("HEADER", "HEADERITEM", "HOT", hdc,
+							JsmCalendar.uxTheme.Wrapper.DrawBackground("HEADER", "HEADERITEM", "HOT", hdc,
 								lp_scr+last, tp, 
 								colwid, headerBuffer,  
 								lp, tp, r.Width-6, headerBuffer);
 						else
-							SynapticEffect.Forms.uxTheme.Wrapper.DrawBackground("HEADER", "HEADERITEM", "NORMAL", hdc,
+							JsmCalendar.uxTheme.Wrapper.DrawBackground("HEADER", "HEADERITEM", "NORMAL", hdc,
 								lp_scr+last, tp, 
 								colwid, headerBuffer,  
 								lp, tp, r.Width-6, headerBuffer);
@@ -2616,7 +2616,7 @@ namespace SynapticEffect.Forms
 					// last column ends before the boundary of the listview 
 					if (!(r.Left+last+2-hscrollBar.Value > r.Left+r.Width))
 					{
-						SynapticEffect.Forms.uxTheme.Wrapper.DrawBackground("HEADER", "HEADERITEM", "NORMAL", hdc, lp_scr+last, tp, r.Width-last-2+hscrollBar.Value, headerBuffer,  r.Left, r.Top, r.Width, headerBuffer);
+						JsmCalendar.uxTheme.Wrapper.DrawBackground("HEADER", "HEADERITEM", "NORMAL", hdc, lp_scr+last, tp, r.Width-last-2+hscrollBar.Value, headerBuffer,  r.Left, r.Top, r.Width, headerBuffer);
 					}
 				}
 				catch

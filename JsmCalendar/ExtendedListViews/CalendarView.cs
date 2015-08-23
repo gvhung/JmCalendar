@@ -21,7 +21,7 @@ using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
 
-namespace SynapticEffect.Forms
+namespace JsmCalendar
 {
 	#region Enumerations
 	#endregion
@@ -220,6 +220,8 @@ namespace SynapticEffect.Forms
     #endregion
      
     #region TaskEvent
+
+    [Serializable]
     public class TaskEventNode :IComparable
     {
         private string title = "";
@@ -365,7 +367,7 @@ namespace SynapticEffect.Forms
     public enum CalendarViewModel { Day,WorkWeek,Week,Month,Year,TimeSpan};
     #endregion
     #region TreeListNode
-    [DesignTimeVisible(false), TypeConverter("SynapticEffect.Forms.TreeListNodeConverter")]
+    [DesignTimeVisible(false), TypeConverter("JsmCalendar.TreeListNodeConverter")]
 	public class TreeListNode: IParentChildList
 	{
 		#region Event Handlers
@@ -1099,7 +1101,7 @@ namespace SynapticEffect.Forms
 	/// ContainerListView, allowing subitems to contain 
 	/// controls.
 	/// </summary>
-	public class CalendarView : SynapticEffect.Forms.ContainerListView
+	public class CalendarView : JsmCalendar.ContainerListView
 	{
 		#region Events
 		protected override void OnSubControlMouseDown(object sender, MouseEventArgs e)
@@ -1242,7 +1244,7 @@ namespace SynapticEffect.Forms
             // Use reflection to load the
             // embedded bitmaps for the
             // styles plus and minus icons
-            Assembly myAssembly = Assembly.GetAssembly(Type.GetType("SynapticEffect.Forms.CalendarView"));
+            Assembly myAssembly = Assembly.GetAssembly(Type.GetType("JsmCalendar.CalendarView"));
             ////string filename = Application.StartupPath + @"\Image\tv_minus.bmp";
             ////bmpMinus = new Bitmap(filename);  yixun
             ////bmpMinus = new Bitmap(Application.StartupPath + @"\Image\tv_plus.bmp");
@@ -1368,8 +1370,7 @@ namespace SynapticEffect.Forms
                     selectedNode.Focused = false;
                     selectedNode.Selected = false;
                 }
-                selectedNode = value;
-
+                selectedNode = value; 
                 OnSelectedIndexChanged(new EventArgs());
                 Invalidate();
             }
@@ -1756,43 +1757,69 @@ namespace SynapticEffect.Forms
 
             if (e.Button == MouseButtons.Left)
             {
-                UnselectNodes(nodes);
-                UnselectTask();
-                //selectedNodes.Clear();
-                selectedNode = null;
-                selectedTask = null;
-                TreeListNode cnode = NodeInNodeRow(e);
-                if (cnode != null)
+                if (e.Y > headerBuffer +ltHeight) //点击日历区域
                 {
-                    cnode.Focused = true;
-                    cnode.Selected = true;
-                    curNode = cnode;
-
-                    this.SelectedNode = cnode;
-                    //添加被选中节点事件;
-                    if (NodeMouseClick != null)
+                    UnselectNodes(nodes);
+                    UnselectTask();
+                    //selectedNodes.Clear();
+                    selectedNode = null;
+                    selectedTask = null;
+                    TreeListNode cnode = NodeInNodeRow(e);
+                    if (cnode != null)
                     {
-                        NodeMouseClick(this, cnode);
+                        cnode.Focused = true;
+                        cnode.Selected = true;
+                        curNode = cnode;
+
+                        this.SelectedNode = cnode;
+                        //添加被选中节点事件;
+                        if (NodeMouseClick != null)
+                        {
+                            NodeMouseClick(this, cnode);
+                        }
                     } 
+                }
+                else //点击标题区域
+                {
+                    //拖动时间区域
+                    if (calendarViewMode == CalendarViewModel.TimeSpan)
+                    {
+                        if (e.Y > headerBuffer && e.Y < headerBuffer + ltHeight)
+                        {
+                            Cursor.Current = Cursors.Hand;
+                            progressTimeMode = true;
+                            progressClickX = e.X;
+                        }
+                    }
+                    if (calendarViewMode == CalendarViewModel.Week || calendarViewMode == CalendarViewModel.WorkWeek || calendarViewMode == CalendarViewModel.Day)
+                    {
+                        if (e.Y > 40 && e.Y < headerBuffer)
+                        {
+                            Cursor.Current = Cursors.Hand;
+                            progressTimeMode = true;
+                            progressClickX = e.X;
+                        }
+                    }
+
                 }
 
                 TaskEventNode taskNode = taskInTaskRow(e);
-                if(taskNode!=null)
+                if (taskNode != null)
                 {
                     taskNode.Selected = true;
                     this.selectedTask = taskNode;
                     //添加任务事件被选中事件
-                    if(TaskMouseClick!=null)
+                    if (TaskMouseClick != null)
                     {
                         TaskMouseClick(this, taskNode);
                     }
 
                     //显示textBox 
                     TaskEventNode taskInTitle = taskTitleInTaskRow(e);
-                    if(taskInTitle!=null)
+                    if (taskInTitle != null)
                     {
                         Rectangle rc = titleRectInTaskRow(e);
-                        if(rc.Width!=0)
+                        if (rc.Width != 0)
                         {
                             taskInTitle.SelectedTitleArea = rc;
                         }
@@ -1800,27 +1827,7 @@ namespace SynapticEffect.Forms
                         timerTxt.Enabled = true;
                     }
                 }
-                
-                //拖动时间区域
-                if(calendarViewMode== CalendarViewModel.TimeSpan)
-                {
-                    if(e.Y>headerBuffer && e.Y<headerBuffer+ltHeight)
-                    {
-                        Cursor.Current = Cursors.Hand;
-                        progressTimeMode = true;
-                        progressClickX = e.X;
-                    }
-                }
-                if(calendarViewMode== CalendarViewModel.Week || calendarViewMode== CalendarViewModel.WorkWeek || calendarViewMode== CalendarViewModel.Day)
-                {
-                    if (e.Y > 40 && e.Y < headerBuffer)
-                    {
-                        Cursor.Current = Cursors.Hand;
-                        progressTimeMode = true;
-                        progressClickX = e.X;
-                    }
-                }
-
+              
                 Invalidate();
 
             } 
@@ -2027,7 +2034,8 @@ namespace SynapticEffect.Forms
                 }
             }
             else if(calendarViewMode== CalendarViewModel.Year)
-            {
+            { 
+                ltHeight = 0;
                 colCount = 37;
                 itemwidth = (r.Width - lfWidth) / colCount;
                  
@@ -2091,8 +2099,18 @@ namespace SynapticEffect.Forms
             g.DrawRectangle(Pens.LightSteelBlue, rectHeaderInfo);
 
             Font textHeader = new System.Drawing.Font("微软雅黑", 11.0f);
+            Font textDate = new System.Drawing.Font("微软雅黑", 9.0f);
 
             g.DrawString("日历", textHeader, new SolidBrush(Color.SteelBlue), 10, 10);
+            if(SelectedNode!=null)
+            {
+                string[] weekArray = new string[] { "星期天", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六" };
+                string dateInfo = SelectedNode.Date.ToString("yyyy年MM月dd日") + " " + weekArray[SelectedNode.Week] + " " + SelectedNode.ChinesDate.Cdate;
+                string dayInfo = "第" + SelectedNode.Date.DayOfYear + "天";
+                g.DrawString(dateInfo, textDate, new SolidBrush(Color.SteelBlue), 50, 6);
+                g.DrawString(dayInfo, textDate, new SolidBrush(Color.SteelBlue), 50, 22);
+
+            }
 
             if( calendarViewMode== CalendarViewModel.Month)
             {
@@ -2671,9 +2689,9 @@ namespace SynapticEffect.Forms
                 int row = i / 7;
                 int col = i % 7;
                 nodes[i].Row = row;
-                nodes[i].Col = col;
+                nodes[i].Col = col; 
             }
-            BindTaskToNode();
+            BindTaskToNode();   
             Invalidate();
 
         }
@@ -2702,14 +2720,17 @@ namespace SynapticEffect.Forms
                 }
             } 
             BindTaskToNode();
-            RefreshTaskEvent();
+            RefreshTaskEvent(); 
             Invalidate();
 
         }
 
         private void LoadCalendarDayView()
         { 
-            int week = GetWeekOfYear(currentTime); 
+            int week = GetWeekOfYear(currentTime);
+
+
+            lfWidth = 60;
             nodes.Clear();
             int i = 0;
             DateTime dt = currentTime;
@@ -2724,7 +2745,7 @@ namespace SynapticEffect.Forms
                 dtNode2.Col = i;
                 nodes.Add(dtNode2);
             }
-            BindTaskToNode();
+            BindTaskToNode(); 
             Invalidate();
         }
          
@@ -2785,7 +2806,7 @@ namespace SynapticEffect.Forms
                 nodes[i].Row = row;
                 nodes[i].Col = col;
             }
-            BindTaskToNode();
+            BindTaskToNode(); 
             Invalidate();
         }
 
@@ -3231,7 +3252,7 @@ namespace SynapticEffect.Forms
             if (calendarViewMode == CalendarViewModel.Month)
             {
                 //绘制选中节点
-                if (node.Selected && isFocused)
+                if (node.Selected)
                 {
                     g.FillRectangle(new SolidBrush(rowSelectColor), sr.Left + 2, sr.Top + 2, sr.Width - 2, 22);
                 } 
@@ -3251,7 +3272,7 @@ namespace SynapticEffect.Forms
                     textFont = new Font("微软雅黑", 10.0f, FontStyle.Bold);
                     daytext = daytext + ", 今日";
                 }
-                if (node.Selected && isFocused)
+                if (node.Selected)
                     g.DrawString(daytext, textFont, rowSelectBrush, (float)(sr.Left + 4 - hscrollBar.Value), (float)(sr.Top + 4 - vscrollBar.Value));
                 else
                     g.DrawString(daytext, textFont, new SolidBrush(node.ForeColor), (float)(sr.Left + 4 - hscrollBar.Value), (float)(sr.Top + 4 - vscrollBar.Value));
@@ -3262,7 +3283,7 @@ namespace SynapticEffect.Forms
                     dayCN = node.ChinesDate.Cmonth + "月"; // node.ChinesDate.Cday;
                 }
                 SizeF strSize = TextRenderer.MeasureText(g, dayCN, textFont, new Size(0, 0), TextFormatFlags.NoPadding);
-                if (node.Selected && isFocused)
+                if (node.Selected)
                     g.DrawString(dayCN, textFont, rowSelectBrush, (float)(sr.Right - strSize.Width - 4 - hscrollBar.Value), (float)(sr.Top + 4 - vscrollBar.Value));
                 else
                     g.DrawString(dayCN, textFont, new SolidBrush(node.ForeColor), (float)(sr.Right - strSize.Width - 4 - hscrollBar.Value), (float)(sr.Top + 4 - vscrollBar.Value));
@@ -3273,7 +3294,7 @@ namespace SynapticEffect.Forms
                 if (node.Row == node.Date.Month - 1) //本月
                 { 
                     //绘制选中节点
-                    if (node.Selected && isFocused)
+                    if (node.Selected)
                     {
                         g.FillRectangle(new SolidBrush(rowSelectColor), sr.Left + 2, sr.Top + 2, sr.Width - 2, 22);
                     } 
@@ -3286,7 +3307,7 @@ namespace SynapticEffect.Forms
                         //daytext = daytext + "今日";
 
                     }
-                    if (node.Selected && isFocused)
+                    if (node.Selected)
                         g.DrawString(daytext, textFont, rowSelectBrush, (float)(sr.Left + 4 - hscrollBar.Value), (float)(sr.Top + 4 - vscrollBar.Value));
                     else
                         g.DrawString(daytext, textFont, new SolidBrush(node.ForeColor), (float)(sr.Left + 4 - hscrollBar.Value), (float)(sr.Top + 4 - vscrollBar.Value));
@@ -3342,7 +3363,7 @@ namespace SynapticEffect.Forms
             g.DrawLine(Pens.Black, srNode.Right - 1, srNode.Top, srNode.Right - 1, srNode.Bottom);   //右侧
             g.DrawLine(p, srNode.Left, srNode.Bottom, srNode.Right, srNode.Bottom);
             //绘制选中节点
-            if (node.Selected && isFocused)
+            if (node.Selected)
             {
                 g.FillRectangle(new SolidBrush(rowSelectColor), srNode.Left+1,srNode.Top,srNode.Width-2,srNode.Height);
             }
@@ -3386,7 +3407,7 @@ namespace SynapticEffect.Forms
           
 
             //绘制选中节点
-            if (node.Selected && isFocused)
+            if (node.Selected)
             {
                 g.FillRectangle(new SolidBrush(rowSelectColor), sr.Left, sr.Top, sr.Width, sr.Height-2);
             } 
@@ -4753,25 +4774,7 @@ namespace SynapticEffect.Forms
                 if (n.Selected) alSelectNodes.Add(n, false);
                 GetAllSelectNodes(n);
             }
-        }
-
-        public void SelectNodesClear()
-        {
-            GetAllSelectNodes();
-            foreach (TreeListNode node in alSelectNodes)
-            {
-                node.Selected = false;
-            }
-            if (selectedNode != null)
-            {
-                selectedNode.Focused = false;
-                selectedNode.Selected = false;
-            }
-            selectedNode = null;
-            Invalidate();
-        }
-
-
+        } 
 		#endregion
 	}
 	#endregion

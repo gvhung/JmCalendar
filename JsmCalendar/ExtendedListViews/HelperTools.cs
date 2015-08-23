@@ -2,7 +2,7 @@
 //  ?Copyright 2002, Pierre ARNAUD, OPaC bright ideas, Switzerland.
 //    All rights reserved.
 
-namespace SynapticEffect.Forms
+namespace JsmCalendar
 {
 	public class HelperTools
 	{
