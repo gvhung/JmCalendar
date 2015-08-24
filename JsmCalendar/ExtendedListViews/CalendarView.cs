@@ -1190,6 +1190,7 @@ namespace JsmCalendar
 
 		private TreeListNodeCollection selectedNodes;
         private List<TaskEventNode> taskEventNodes;
+         
 
 		private bool mouseActivate = false;
 
@@ -1442,6 +1443,10 @@ namespace JsmCalendar
         {
             get { return maxTime; }
             set { maxTime = value; }
+        }
+        public List<TaskEventNode> TaskEventNodes
+        {
+            get { return taskEventNodes; } 
         }
 
 		#endregion
@@ -1779,10 +1784,8 @@ namespace JsmCalendar
                 if (e.Y > headerBuffer +ltHeight) //点击日历区域
                 {
                     UnselectNodes(nodes);
-                    UnselectTask();
                     //selectedNodes.Clear();
                     selectedNode = null;
-                    selectedTask = null;
                     TreeListNode cnode = NodeInNodeRow(e);
                     if (cnode != null)
                     {
@@ -1822,6 +1825,9 @@ namespace JsmCalendar
 
                 }
 
+
+                UnselectTask();
+                selectedTask = null;
                 TaskEventNode taskNode = taskInTaskRow(e);
                 if (taskNode != null)
                 {
@@ -2956,6 +2962,34 @@ namespace JsmCalendar
                 RefreshTaskEvent();
                 Invalidate();
             }
+        }
+
+        public void AddTask( List<TaskEventNode> lstTask)
+        { 
+            foreach(TaskEventNode task in lstTask)
+            { 
+                taskEventNodes.Add(task);
+            }
+            BindTaskToNode();
+            RefreshTaskEvent();
+            Invalidate();
+        }
+
+        public void RemoveTask(TaskEventNode task)
+        {
+            if (taskEventNodes.Contains(task))
+            {
+                taskEventNodes.Remove(task); 
+                RefreshTaskEvent();
+                Invalidate();
+            }
+
+        }
+
+        public void ClearTask()
+        {
+            taskEventNodes.Clear();
+            Invalidate();
         }
 
         private void BindTaskToNode()
