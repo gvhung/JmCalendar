@@ -1126,8 +1126,7 @@ namespace JsmCalendar
 		}
 
 		protected virtual void OnNodesChanged(object sender, EventArgs e)
-		{
-			AdjustScrollbars();
+		{ 
 		}
 
         public delegate void TreeListViewEventHandler(object sender, TreeListNode e);
@@ -1201,6 +1200,7 @@ namespace JsmCalendar
         //设置选中的节点;
         private TreeListNode selectedNode = null;
         private TaskEventNode selectedTask = null;
+
         private Color tempBackColor;
         private Color tempForeColor;
 
@@ -1382,6 +1382,25 @@ namespace JsmCalendar
                 selectedNode = value; 
                 OnSelectedIndexChanged(new EventArgs());
                 Invalidate();
+            }
+        }
+
+
+        [Browsable(false)]
+        public TaskEventNode SelectedTask
+        {
+            get { return selectedTask; }
+            set 
+            {
+                if (selectedTask == value) return;
+                if (selectedTask!=null)
+                {
+                    selectedTask.Selected = false; 
+                }
+                selectedTask = value;
+                selectedTask.Selected = true;
+                Invalidate();
+
             }
         }
 
@@ -1780,8 +1799,8 @@ namespace JsmCalendar
             HideTxtBox();
              
             if (e.Button == MouseButtons.Left)
-            {
-                if (e.Y > headerBuffer +ltHeight) //点击日历区域
+            { 
+                if (e.Y > headerBuffer + ltHeight) //点击日历区域 ,选择日期
                 {
                     UnselectNodes(nodes);
                     //selectedNodes.Clear();
@@ -1799,9 +1818,9 @@ namespace JsmCalendar
                         {
                             NodeMouseClick(this, cnode);
                         }
-                    } 
+                    }
                 }
-                else //点击标题区域
+                else//点击标题区域
                 {
                     //拖动时间区域
                     if (calendarViewMode == CalendarViewModel.TimeSpan)
@@ -1825,42 +1844,48 @@ namespace JsmCalendar
 
                 }
 
-
-                UnselectTask();
-                selectedTask = null;
-                TaskEventNode taskNode = taskInTaskRow(e);
-                if (taskNode != null)
+                if (e.Y > headerBuffer) //点击标题以下区域，选择任务事件
                 {
-                    taskNode.Selected = true;
-                    this.selectedTask = taskNode;
-                    if(e.Clicks==2)
+                    UnselectTask();
+                    selectedTask = null;
+                    TaskEventNode taskNode = taskInTaskRow(e);
+                    if (taskNode != null)
                     {
-                        if(TaskDoubleClick!=null)
+                        taskNode.Selected = true;
+                        this.selectedTask = taskNode;
+                        if (e.Clicks == 2)
                         {
-                            TaskDoubleClick(this, taskNode);
+                            if (TaskDoubleClick != null)
+                            {
+                                TaskDoubleClick(this, taskNode);
+                            }
+                        }
+                        else
+                        {
+                            //添加任务事件被选中事件
+                            if (TaskMouseClick != null)
+                            {
+                                TaskMouseClick(this, taskNode);
+                            }
+                            //显示textBox 
+                            TaskEventNode taskInTitle = taskTitleInTaskRow(e);
+                            if (taskInTitle != null)
+                            {
+                                Rectangle rc = titleRectInTaskRow(e);
+                                if (rc.Width != 0)
+                                {
+                                    taskInTitle.SelectedTitleArea = rc;
+                                }
+                                txtNode.Tag = taskNode;
+                                timerTxt.Enabled = true;
+                            }
                         }
                     }
-                    else
-                    {
-                        //添加任务事件被选中事件
-                        if (TaskMouseClick != null)
-                        {
-                            TaskMouseClick(this, taskNode);
-                        }
-                        //显示textBox 
-                        TaskEventNode taskInTitle = taskTitleInTaskRow(e);
-                        if (taskInTitle != null)
-                        {
-                            Rectangle rc = titleRectInTaskRow(e);
-                            if (rc.Width != 0)
-                            {
-                                taskInTitle.SelectedTitleArea = rc;
-                            }
-                            txtNode.Tag = taskNode;
-                            timerTxt.Enabled = true;
-                        }
-                    } 
                 }
+
+
+                
+                
               
                 Invalidate();
 
@@ -1970,9 +1995,7 @@ namespace JsmCalendar
 		protected override void DrawRows(Graphics g, Rectangle r)
 		{
 			// render item rows
-			int i;
-			int totalRend = 0, childCount = 0;
-
+			int i; 
 			int maxrend = ClientRectangle.Height/itemheight+1;
 
             rendcnt = 0;
@@ -1985,6 +2008,8 @@ namespace JsmCalendar
                 colCount = 7;
                 itemwidth = r.Width / colCount;
                 itemheight = (r.Height - headerBuffer) / 5;
+                ltHeight = 0;
+                AdjustScrollbars();
                 for (i = 0; i < nodes.Count; i++)
                 {
                     RenderMonthDateNode(nodes[i], g, r, 0);
@@ -2011,6 +2036,8 @@ namespace JsmCalendar
                 itemwidth = (r.Width - lfWidth - vsize) / colCount;
                 itemheight = 20;
                 ltHeight = 0;
+                AdjustScrollbars();
+
                 //跨区域任务 
                 foreach (TaskEventNode taskEvent in taskEventNodes)
                 {
@@ -2071,9 +2098,10 @@ namespace JsmCalendar
             { 
                 ltHeight = 0;
                 colCount = 37;
-                itemwidth = (r.Width - lfWidth) / colCount;
-                 
+                itemwidth = (r.Width - lfWidth) / colCount; 
                 itemheight = (r.Height - headerBuffer) / 12;
+                AdjustScrollbars();
+
                 //绘制左侧月
                 RenderYearLeftInfo(g, r, 0);
                 for (i = 0; i < nodes.Count; i++)
@@ -2092,6 +2120,8 @@ namespace JsmCalendar
                 ltHeight = 35;
                 itemwidth = 25;
                 itemheight = r.Height - headerBuffer - ltHeight;
+                AdjustScrollbars();
+
                 //绘制时间条标题
                 RenderTimeSpanTopInfo(g, r, 0);
                 for (i = 0; i < nodes.Count; i++)
@@ -2507,21 +2537,24 @@ namespace JsmCalendar
 
             txtNode.AccessibleDescription = "Save";
             txtNode.Text = task.Title;
-            txtNode.Location=new Point(r.Left,r.Top);
+            int left = r.Left;
+            int top = r.Top < headerBuffer ? headerBuffer : r.Top;
+            int height = r.Height - (r.Top < headerBuffer ? headerBuffer - r.Top : 0);
+            txtNode.Location=new Point(left,top);
             if (calendarViewMode == CalendarViewModel.Month || calendarViewMode== CalendarViewModel.Year)
             {
                 txtNode.Multiline = false;
-                txtNode.ClientSize = new Size(r.Width - 6, r.Height);
+                txtNode.ClientSize = new Size(r.Width - 6, height);
             }
             else if(calendarViewMode== CalendarViewModel.TimeSpan)
             {
-                txtNode.Multiline = false; 
-                txtNode.ClientSize = new Size(r.Width - 2, r.Height);
+                txtNode.Multiline = false;
+                txtNode.ClientSize = new Size(r.Width - 2, height);
             }
             else if (calendarViewMode == CalendarViewModel.Week || calendarViewMode== CalendarViewModel.WorkWeek || calendarViewMode == CalendarViewModel.Day)
             {
                 txtNode.Multiline = true;
-                txtNode.ClientSize = new Size(r.Width - 2, r.Height-2);
+                txtNode.ClientSize = new Size(r.Width - 2, height - 2);
 
             }
             txtNode.Parent = this;
@@ -2600,8 +2633,7 @@ namespace JsmCalendar
                     currentTime = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, 0, 0, 0);
                     LoadCalendarTimeSpanView();
                     break;
-            }
-            AdjustScrollbars();
+            } 
             Invalidate();
         }
 
@@ -2612,8 +2644,7 @@ namespace JsmCalendar
                 case CalendarViewModel.TimeSpan:
                     LoadCalendarTimeSpanView();
                     break;
-            }
-            AdjustScrollbars();
+            } 
             Invalidate();
         }
 
@@ -2685,7 +2716,8 @@ namespace JsmCalendar
             int year = currentTime.Year;
             int month = currentTime.Month;
 
-            lfWidth = 0;
+            lfWidth = 0; 
+
             nodes.Clear(); 
             int nowMonthDays = System.Threading.Thread.CurrentThread.CurrentUICulture.Calendar.GetDaysInMonth(year, month);
              
@@ -2740,6 +2772,7 @@ namespace JsmCalendar
             int week = GetWeekOfYear(currentTime);
 
             lfWidth = 60;
+            itemheight = 20;
             nodes.Clear();
             int i = 0;
             for (i = 0; i < dayCount; i++)
@@ -2773,6 +2806,7 @@ namespace JsmCalendar
 
 
             lfWidth = 60;
+            itemheight = 20;
             nodes.Clear();
             int i = 0;
             DateTime dt = currentTime;
@@ -3743,7 +3777,7 @@ namespace JsmCalendar
                     string ts = taskEvent.StartTime.ToString("HH:mm") + " - " + taskEvent.EndTime.ToString("HH:mm") + " ";
                     SizeF tsSize = g.MeasureString(ts, textFont);
                     int tsWidth = ((int)tsSize.Width);
-                    //任务事件标题绘制区域
+                    //任务事件标题绘制区域 
                     Rectangle rcTaskTitle = new Rectangle(rcTask.Left + tsWidth, rcTask.Top, rcTask.Width - tsWidth + 2 + 2, rcTask.Height);
                     taskEvent.TitleAreas.Add(rcTaskTitle);
 
@@ -4012,9 +4046,7 @@ namespace JsmCalendar
                     int d = hb + 1 - sr.Top;
                     Rectangle rh = new Rectangle(sr.Left, sr.Top + d, sr.Width, sr.Height - d);
                     g.Clip = new Region(rh);
-                }
-
-                if (sr.Top < hb - 40) return; 
+                } 
 
                 taskEvent.RectAreas.Add(sr);
 
@@ -4682,8 +4714,7 @@ namespace JsmCalendar
 			{
 				node.CollapseAll();
 			}
-			allCollapsed = true;
-			AdjustScrollbars();
+			allCollapsed = true; 
 			Invalidate();
 		}
 
@@ -4694,7 +4725,6 @@ namespace JsmCalendar
 				node.ExpandAll();
 			}
 			allCollapsed = false;
-			AdjustScrollbars();
 			Invalidate();
 		}
 
@@ -4782,8 +4812,7 @@ namespace JsmCalendar
                 vscrollBar.Value = v;
             }
             else if (value > vscrollBar.Value + vscrollBar.Height)
-            {
-                AdjustScrollbars();
+            { 
                 int max = vscrollBar.Maximum;
                 int v = value - vscrollBar.Height + itemheight; 
                 if (v > max) v = max;

@@ -1495,8 +1495,7 @@ namespace JsmCalendar
 		{
 			base.OnResize(e);
 			GenerateHeaderRect();
-			GenerateRowsRect();
-			AdjustScrollbars();
+			GenerateRowsRect(); 
            
 			// invalidate subitem controls
 			for (int i=0; i<items.Count; i++)
@@ -1918,8 +1917,7 @@ namespace JsmCalendar
 				colScalePos = 0;
 				scaledCol = -1;
 				colScaleWid = 0;
-
-				AdjustScrollbars();
+                 
 			}
 
 			if (lastColPressed >= 0)

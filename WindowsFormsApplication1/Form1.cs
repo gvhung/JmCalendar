@@ -54,7 +54,7 @@ namespace WindowsFormsApplication1
             TaskEventNode taskEvent6 = new TaskEventNode("创建日程管理3", "完成日历控件", "公司", new DateTime(2015, 7, 29, 14, 30, 0), new DateTime(2015, 7, 29, 15, 0, 0));
             this.calendarView1.AddTask(taskEvent6);
 
-            TaskEventNode taskEvent7 = new TaskEventNode("创建日程管理4", "完成日历控件", "公司", new DateTime(2015, 7, 28, 16, 30, 0), new DateTime(2015, 7, 28, 17, 0, 0));
+            TaskEventNode taskEvent7 = new TaskEventNode("创建日程管理4", "完成日历控件", "公司", new DateTime(2015, 8, 25, 00, 30, 0), new DateTime(2015, 8, 25, 23, 30, 0));
             this.calendarView1.AddTask(taskEvent7);
 
             //TaskEventNode taskEvent8 = new TaskEventNode("创建日程管理4", "完成日历控件", "公司", new DateTime(2015, 7, 28, 16, 30, 0), new DateTime(2015, 7, 28, 17, 0, 0));
