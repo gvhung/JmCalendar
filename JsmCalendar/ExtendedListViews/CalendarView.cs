@@ -1243,6 +1243,7 @@ namespace JsmCalendar
             txtNode.MouseUp += txtNode_MouseUp;
             txtNode.MouseMove += txtNode_MouseMove;
             txtNode.KeyDown += txtNode_KeyDown;
+            txtNode.Leave += txtNode_Leave;
 
             timerTxt = new Timer();
             timerTxt.Interval = 1000;
@@ -1260,6 +1261,7 @@ namespace JsmCalendar
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CalendarView));
            //// bmpMinus = ((System.Drawing.Bitmap)(resources.GetObject("tv_minus.bmp")));
         }
+
 
         #endregion
 
@@ -1664,9 +1666,7 @@ namespace JsmCalendar
 
 		protected override void OnResize(EventArgs e)
 		{
-			base.OnResize(e);
-
-            HideTxtBox();
+			base.OnResize(e); 
             RefreshCalendarView();
 		}
 
@@ -2488,9 +2488,10 @@ namespace JsmCalendar
         }
 		#endregion
 
-        #region TextBoxEdit
-
-        private bool muiltTxtDown = false;
+        #region TextBoxEdit 
+        void txtNode_Leave(object sender, EventArgs e)
+        { 
+        }
         void txtNode_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter || e.KeyCode== Keys.Escape)
@@ -2612,6 +2613,7 @@ namespace JsmCalendar
 
         private void LoadCalendarView()
         {
+            HideTxtBox();
             switch (calendarViewMode)
             {
                 case CalendarViewModel.Month:
@@ -2624,7 +2626,7 @@ namespace JsmCalendar
                     LoadCalendarWeekView(5);
                     break;
                 case CalendarViewModel.Day:
-                    LoadCalendarDayView();
+                    LoadCalendarWeekView(1);
                     break;
                 case CalendarViewModel.Year:
                     LoadCalendarYearView();
@@ -2638,7 +2640,8 @@ namespace JsmCalendar
         }
 
         private void RefreshCalendarView()
-        { 
+        {
+            HideTxtBox();
             switch (calendarViewMode)
             { 
                 case CalendarViewModel.TimeSpan:
@@ -2650,6 +2653,7 @@ namespace JsmCalendar
 
         public void PreView()
         {
+            HideTxtBox();
             switch (calendarViewMode)
             {
                 case CalendarViewModel.Month:
@@ -2666,7 +2670,7 @@ namespace JsmCalendar
                     break;
                 case CalendarViewModel.Day:
                     currentTime = currentTime.AddDays(-1);
-                    LoadCalendarDayView();
+                    LoadCalendarWeekView(1);
                     break;
                 case CalendarViewModel.Year:
                     currentTime = currentTime.AddYears(-1);
@@ -2682,6 +2686,7 @@ namespace JsmCalendar
         }
         public void NextView()
         {
+            HideTxtBox();
             switch (calendarViewMode)
             {
                 case CalendarViewModel.Month:
@@ -2698,7 +2703,7 @@ namespace JsmCalendar
                     break;
                 case CalendarViewModel.Day:
                     currentTime = currentTime.AddDays(1);
-                    LoadCalendarDayView();
+                    LoadCalendarWeekView(1);
                     break;
                 case CalendarViewModel.Year:
                     currentTime = currentTime.AddYears(1);
@@ -2767,8 +2772,11 @@ namespace JsmCalendar
         }
         private void LoadCalendarWeekView(int dayCount)
         { 
-            DateTime startWeekDay = currentTime.AddDays(1 - Convert.ToInt32(currentTime.DayOfWeek.ToString("d")));
-            DateTime endWeekDay = startWeekDay.AddDays(dayCount);
+            DateTime startWeekTime = currentTime.AddDays(1 - Convert.ToInt32(currentTime.DayOfWeek.ToString("d"))); 
+            if(dayCount==1)
+            {
+                startWeekTime = currentTime;
+            }
             int week = GetWeekOfYear(currentTime);
 
             lfWidth = 60;
@@ -2777,7 +2785,7 @@ namespace JsmCalendar
             int i = 0;
             for (i = 0; i < dayCount; i++)
             {
-                DateTime dt = startWeekDay.AddDays(i);
+                DateTime dt = startWeekTime.AddDays(i);
                 for(int j=0;j<24;j++)
                 { 
                     TreeListNode dtNode1 = new TreeListNode(new DateTime(dt.Year, dt.Month, dt.Day,j,0,0));
@@ -2798,37 +2806,8 @@ namespace JsmCalendar
             minTime = nodes[0].Date;
             maxTime = nodes[nodes.Count - 1].Date;
 
-        }
+        } 
 
-        private void LoadCalendarDayView()
-        { 
-            int week = GetWeekOfYear(currentTime);
-
-
-            lfWidth = 60;
-            itemheight = 20;
-            nodes.Clear();
-            int i = 0;
-            DateTime dt = currentTime;
-            for (int j = 0; j < 24; j++)
-            {
-                TreeListNode dtNode1 = new TreeListNode(new DateTime(dt.Year, dt.Month, dt.Day, j, 0, 0));
-                dtNode1.Row = j * 2;
-                dtNode1.Col = i;
-                nodes.Add(dtNode1);
-                TreeListNode dtNode2 = new TreeListNode(new DateTime(dt.Year, dt.Month, dt.Day, j, 30, 0));
-                dtNode2.Row = j * 2 + 1;
-                dtNode2.Col = i;
-                nodes.Add(dtNode2);
-            }
-            BindTaskToNode();
-            Invalidate();
-
-            //日历当前视图时间
-            minTime = nodes[0].Date;
-            maxTime = nodes[nodes.Count - 1].Date;
-        }
-         
         private void LoadCalendarYearView()
         {
             int year = currentTime.Year;
@@ -3013,7 +2992,12 @@ namespace JsmCalendar
         {
             if (taskEventNodes.Contains(task))
             {
-                taskEventNodes.Remove(task); 
+                taskEventNodes.Remove(task);
+
+                if (selectedTask == task)
+                {
+                    selectedTask = null;
+                }
                 RefreshTaskEvent();
                 Invalidate();
             }
