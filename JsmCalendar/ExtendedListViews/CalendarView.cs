@@ -220,7 +220,7 @@ namespace JsmCalendar
     #endregion
      
     #region TaskEvent
-
+     
     [Serializable]
     public class TaskEventNode :IComparable
     {
@@ -366,7 +366,7 @@ namespace JsmCalendar
     }
     #endregion
     #region CalenderViewModel
-    public enum CalendarViewModel { Day,WorkWeek,Week,Month,Year,TimeSpan};
+    public enum CalendarViewModel { Day,WorkWeek,Week,MonthWeek,Month,Year,TimeSpan};
     #endregion
     #region TreeListNode
     [DesignTimeVisible(false), TypeConverter("JsmCalendar.TreeListNodeConverter")]
@@ -462,11 +462,15 @@ namespace JsmCalendar
                 isToday = true;
             }
             chinesDate = new ChineseDate(dt);
-            backcolor = Color.LightGoldenrodYellow;
+            backcolor = Color.Honeydew;
             nodes = new TreeListNodeCollection();
             relateTasks = new List<TaskEventNode>();
             nodes.Owner = this;
             nodes.MouseDown += new MouseEventHandler(OnSubNodeMouseDown);
+
+
+            subitems = new ContainerSubListViewItemCollection();
+            subitems.ItemsChanged += new ItemsChangedEventHandler(OnSubItemsChanged);
         }
 
         public TreeListNode()
@@ -1832,7 +1836,7 @@ namespace JsmCalendar
                             progressClickX = e.X;
                         }
                     }
-                    if (calendarViewMode == CalendarViewModel.Week || calendarViewMode == CalendarViewModel.WorkWeek || calendarViewMode == CalendarViewModel.Day)
+                    if (calendarViewMode == CalendarViewModel.Week || calendarViewMode == CalendarViewModel.WorkWeek || calendarViewMode == CalendarViewModel.Day || calendarViewMode== CalendarViewModel.MonthWeek)
                     {
                         if (e.Y > 40 && e.Y < headerBuffer)
                         {
@@ -1905,7 +1909,7 @@ namespace JsmCalendar
                     tHeader = headerBuffer;
                     bHeader = headerBuffer + ltHeight;
                 }
-                else if(calendarViewMode == CalendarViewModel.Week || calendarViewMode == CalendarViewModel.WorkWeek || calendarViewMode == CalendarViewModel.Day)
+                else if(calendarViewMode == CalendarViewModel.Week || calendarViewMode == CalendarViewModel.WorkWeek || calendarViewMode == CalendarViewModel.Day || calendarViewMode== CalendarViewModel.MonthWeek)
                 {
                     tHeader = 40;
                     bHeader = headerBuffer;
@@ -2019,7 +2023,7 @@ namespace JsmCalendar
                     RenderMonthTaskEventNode(taskEventNodes[i], g, r, 0);
                 }
             }
-            else if (calendarViewMode == CalendarViewModel.Week || calendarViewMode == CalendarViewModel.WorkWeek || calendarViewMode == CalendarViewModel.Day)
+            else if (calendarViewMode == CalendarViewModel.Week || calendarViewMode == CalendarViewModel.WorkWeek || calendarViewMode == CalendarViewModel.Day || calendarViewMode== CalendarViewModel.MonthWeek)
             {
                 if (calendarViewMode == CalendarViewModel.Week)
                 {
@@ -2033,10 +2037,12 @@ namespace JsmCalendar
                 {
                     colCount = 1;
                 }
-                itemwidth = (r.Width - lfWidth - vsize) / colCount;
+                else if(calendarViewMode== CalendarViewModel.MonthWeek)
+                {
+                    colCount = System.Threading.Thread.CurrentThread.CurrentUICulture.Calendar.GetDaysInMonth(currentTime.Year, currentTime.Month); 
+                } 
                 itemheight = 20;
                 ltHeight = 0;
-                AdjustScrollbars();
 
                 //跨区域任务 
                 foreach (TaskEventNode taskEvent in taskEventNodes)
@@ -2080,8 +2086,11 @@ namespace JsmCalendar
                         taskEvent.AreaIndex = ltHeight / 30;
                     }
                 }
-                 
 
+
+                AdjustScrollbars();
+
+                itemwidth = (r.Width - lfWidth - vsize) / colCount;
                 //绘制左侧小时
                 RenderWeekLeftInfo(g, r, 0);
                 //绘制每个小时节点
@@ -2185,7 +2194,10 @@ namespace JsmCalendar
                 {
                     //绘制标题栏按钮 
                     //System.Windows.Forms.ControlPaint.DrawButton(g, lp_scr + last, r.Top + 2, width, r.Top + headerBuffer, ButtonState.Flat);
-
+                    if(i==6)
+                    {
+                        width = r.Width - (lp_scr + last) - 1;
+                    }
                     Rectangle rect = new Rectangle(lp_scr + last, r.Top + headerBuffer-lh, width,lh);
                     LinearGradientBrush linebrush = new LinearGradientBrush(rect, Color.FromArgb(237, 246, 245), Color.FromArgb(112, 178, 235), 90f);
                     Blend blend = new Blend();
@@ -2205,25 +2217,29 @@ namespace JsmCalendar
 
                     last += width;
                 }  
-            } 
-            else if(calendarViewMode== CalendarViewModel.Week || calendarViewMode== CalendarViewModel.WorkWeek)
+            }
+            else if (calendarViewMode == CalendarViewModel.Week || calendarViewMode == CalendarViewModel.WorkWeek || calendarViewMode == CalendarViewModel.Day || calendarViewMode== CalendarViewModel.MonthWeek)
             {
-                int days = 7;
+                int days = 1;
+                if(calendarViewMode== CalendarViewModel.Day)
+                {
+                    days = 1;
+                }
                 if(calendarViewMode== CalendarViewModel.WorkWeek)
                 {
                     days = 5;
                 }
+                else if(calendarViewMode== CalendarViewModel.Week)
+                {
+                    days = 7;
+                } 
+                else if(calendarViewMode == CalendarViewModel.MonthWeek)
+                {
+                    days = System.Threading.Thread.CurrentThread.CurrentUICulture.Calendar.GetDaysInMonth(currentTime.Year,currentTime.Month);
+                }
                 //当前一周 
                 int lf = lfWidth;
-                if (nodes.Count < 1) return;
-                string[] weekArray = new string[] { "星期一", "星期二", "星期三", "星期四", "星期五", "星期六","星期天"};
-                for (i = 0; i < days; i++)
-                {
-                    int nodeIndex =48*i;
-                    TreeListNode node = nodes[nodeIndex];
-                    weekArray[i] = node.Month + "月" + node.Day + "日" + " " + weekArray[i] + " " + node.ChinesDate.Cday;
-                }
-
+                if (nodes.Count < 1) return; 
                 Rectangle rect = new Rectangle(lp_scr +last, r.Top + headerBuffer - lh, lf, lh);
                 LinearGradientBrush linebrush = new LinearGradientBrush(rect, Color.FromArgb(237, 246, 245), Color.FromArgb(112, 178, 235), 90f);
                 Blend blend = new Blend();
@@ -2236,12 +2252,22 @@ namespace JsmCalendar
                 g.FillRectangle(linebrush, rect);
                 g.DrawRectangle(Pens.LightSteelBlue, rect);
 
-                int width = (r.Width - lf) / days;
+                int width = (r.Width - lf - vsize) / days;
                 for (i = 0; i < days; i++)
                 {
-                    //绘制标题栏按钮 
-                    //System.Windows.Forms.ControlPaint.DrawButton(g, lp_scr + last, r.Top + 2, width, r.Top + headerBuffer, ButtonState.Flat);
+                    //绘制标题栏按钮  
+                    int nodeIndex = 48 * i;
+                    TreeListNode node = nodes[nodeIndex];
+                    string dayInfo =node.Day+"日";
+                    if(days<=7)
+                    {
+                        dayInfo = node.Month + "月" + node.Day + "日"  + " " + GetWeekString(node.Week) + " " + node.ChinesDate.Cday; 
+                    }
 
+                    if (i == days - 1)
+                    {
+                        width = r.Width - (lp_scr + lf + last)-1;
+                    }
                     rect = new Rectangle(lp_scr + lf + last, r.Top + headerBuffer - lh, width, lh);
                     linebrush = new LinearGradientBrush(rect, Color.FromArgb(237, 246, 245), Color.FromArgb(112, 178, 235), 90f);
                   
@@ -2251,54 +2277,14 @@ namespace JsmCalendar
                     g.DrawRectangle(Pens.LightSteelBlue, rect);
                     //绘制标题文本
 
-                    string sp = TruncatedString(weekArray[i], width, 25, g);
+                    string sp = TruncatedString(dayInfo, width, 25, g);
                     Font textFont = new System.Drawing.Font("微软雅黑", 10.0f);
                     g.DrawString(sp, textFont, SystemBrushes.ControlText, (float)(lp_scr + lf + last + (width / 2) - (Helpers.StringTools.MeasureDisplayStringWidth(g, sp, this.Font) / 2)), (float)(r.Top + 4 + headerBuffer - lh));
 
                     last += width;
                 }
 
-            } 
-            else if(calendarViewMode == CalendarViewModel.Day)
-            {
-                int lf = lfWidth;
-                if (nodes.Count < 1) return;
-                string[] weekArray = new string[] { "星期天" ,"星期一", "星期二", "星期三", "星期四", "星期五", "星期六" };
-
-                TreeListNode node = nodes[0];
-                int week = node.Week;
-
-                string dayInfo = node.Month + "月" + node.Day + "日" + " " + weekArray[week] + " " + node.ChinesDate.Cmonth + "月" + node.ChinesDate.Cday;
- 
-
-                Rectangle rect = new Rectangle(lp_scr + last, r.Top + headerBuffer - lh, lf, lh);
-                LinearGradientBrush linebrush = new LinearGradientBrush(rect, Color.FromArgb(237, 246, 245), Color.FromArgb(112, 178, 235), 90f);
-                Blend blend = new Blend();
-                float[] fs = new float[5] { 0f, 0.5f, 0.6f, 0.8f, 1f };
-                float[] f = new float[5] { 0f, 0.3f, 0.5f, 0.8f, 0.1f };
-                blend.Positions = fs;
-                blend.Factors = f;
-                linebrush.Blend = blend;
-                g.SmoothingMode = SmoothingMode.AntiAlias;
-                g.FillRectangle(linebrush, rect);
-                g.DrawRectangle(Pens.LightSteelBlue, rect);
-
-                int width = (r.Width - lf);
-                rect = new Rectangle(lp_scr + lf + last, r.Top + headerBuffer - lh, width, lh);
-                linebrush = new LinearGradientBrush(rect, Color.FromArgb(237, 246, 245), Color.FromArgb(112, 178, 235), 90f);
-
-                linebrush.Blend = blend;
-                g.SmoothingMode = SmoothingMode.AntiAlias;
-                g.FillRectangle(linebrush, rect);
-                g.DrawRectangle(Pens.LightSteelBlue, rect);
-                //绘制标题文本
-
-                string sp = TruncatedString(dayInfo, width, 25, g);
-                Font textFont = new System.Drawing.Font("微软雅黑", 10.0f);
-                g.DrawString(sp, textFont, SystemBrushes.ControlText, (float)(lp_scr + lf + last + (width / 2) - (Helpers.StringTools.MeasureDisplayStringWidth(g, sp, this.Font) / 2)), (float)(r.Top + 4 + headerBuffer - lh));
-
-                 
-            }
+            }  
             else if(calendarViewMode== CalendarViewModel.Year)
             {
                 int lf = lfWidth;
@@ -2357,7 +2343,7 @@ namespace JsmCalendar
                 {
                     if(!(nodes[i].Date.Year==dtFirstNode.Year && nodes[i].Date.Month==dtFirstNode.Month && nodes[i].Date.Day== dtFirstNode.Day) || i==nodes.Count-1)
                     {
-                        int width = itemwidth * (i - startColIndex );
+                        int width = (int)(itemwidth * (i - startColIndex ));
 
                         //绘制新的日期标题
                         Rectangle rect = new Rectangle(lp_scr + last, r.Top + headerBuffer - lh, width, lh);
@@ -2552,7 +2538,7 @@ namespace JsmCalendar
                 txtNode.Multiline = false;
                 txtNode.ClientSize = new Size(r.Width - 2, height);
             }
-            else if (calendarViewMode == CalendarViewModel.Week || calendarViewMode== CalendarViewModel.WorkWeek || calendarViewMode == CalendarViewModel.Day)
+            else if (calendarViewMode == CalendarViewModel.Week || calendarViewMode== CalendarViewModel.WorkWeek || calendarViewMode == CalendarViewModel.Day || calendarViewMode== CalendarViewModel.MonthWeek)
             {
                 txtNode.Multiline = true;
                 txtNode.ClientSize = new Size(r.Width - 2, height - 2);
@@ -2628,6 +2614,9 @@ namespace JsmCalendar
                 case CalendarViewModel.Day:
                     LoadCalendarWeekView(1);
                     break;
+                case CalendarViewModel.MonthWeek:
+                    LoadCalendarWeekView(31);
+                    break;
                 case CalendarViewModel.Year:
                     LoadCalendarYearView();
                     break;
@@ -2635,7 +2624,8 @@ namespace JsmCalendar
                     currentTime = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, 0, 0, 0);
                     LoadCalendarTimeSpanView();
                     break;
-            } 
+            }
+            AdjustScrollbars();
             Invalidate();
         }
 
@@ -2672,6 +2662,10 @@ namespace JsmCalendar
                     currentTime = currentTime.AddDays(-1);
                     LoadCalendarWeekView(1);
                     break;
+                case CalendarViewModel.MonthWeek:
+                    currentTime = currentTime.AddMonths(-1);
+                    LoadCalendarWeekView(31);
+                    break;
                 case CalendarViewModel.Year:
                     currentTime = currentTime.AddYears(-1);
                     LoadCalendarYearView();
@@ -2704,6 +2698,10 @@ namespace JsmCalendar
                 case CalendarViewModel.Day:
                     currentTime = currentTime.AddDays(1);
                     LoadCalendarWeekView(1);
+                    break; 
+                case CalendarViewModel.MonthWeek:
+                    currentTime = currentTime.AddMonths(1);
+                    LoadCalendarWeekView(31);
                     break;
                 case CalendarViewModel.Year:
                     currentTime = currentTime.AddYears(1);
@@ -2771,11 +2769,27 @@ namespace JsmCalendar
 
         }
         private void LoadCalendarWeekView(int dayCount)
-        { 
-            DateTime startWeekTime = currentTime.AddDays(1 - Convert.ToInt32(currentTime.DayOfWeek.ToString("d"))); 
-            if(dayCount==1)
+        {
+            DateTime startDayTime = DateTime.Now;
+            if(dayCount==1)  //一天
             {
-                startWeekTime = currentTime;
+                startDayTime = currentTime;
+            }
+            else if(dayCount==31)  //一个月
+            {
+                int year = currentTime.Year;
+                int month = currentTime.Month;
+                int nowMonthDays = System.Threading.Thread.CurrentThread.CurrentUICulture.Calendar.GetDaysInMonth(year, month);
+                startDayTime = new DateTime(year, month, 1);
+                dayCount = nowMonthDays; 
+            }
+            else if(dayCount==5) //工作周
+            {
+                startDayTime = currentTime.AddDays(1 - Convert.ToInt32(currentTime.DayOfWeek.ToString("d")));  
+            }
+            else if(dayCount==7)  //周
+            {
+                startDayTime = currentTime.AddDays(1 - Convert.ToInt32(currentTime.DayOfWeek.ToString("d")));   
             }
             int week = GetWeekOfYear(currentTime);
 
@@ -2785,7 +2799,7 @@ namespace JsmCalendar
             int i = 0;
             for (i = 0; i < dayCount; i++)
             {
-                DateTime dt = startWeekTime.AddDays(i);
+                DateTime dt = startDayTime.AddDays(i);
                 for(int j=0;j<24;j++)
                 { 
                     TreeListNode dtNode1 = new TreeListNode(new DateTime(dt.Year, dt.Month, dt.Day,j,0,0));
@@ -2876,7 +2890,7 @@ namespace JsmCalendar
         private void LoadCalendarTimeSpanView()
         {
             itemwidth = 25;
-            int nodeCount = this.Width / itemwidth+2;
+            int nodeCount = this.Width / (int)itemwidth + 2;
              
             DateTime dtStart = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, currentTime.Hour, currentTime.Minute, currentTime.Second);
 
@@ -2909,7 +2923,7 @@ namespace JsmCalendar
 
         private void RefreshTaskEvent()
         {
-            if (calendarViewMode == CalendarViewModel.Week || calendarViewMode== CalendarViewModel.WorkWeek || calendarViewMode == CalendarViewModel.Day)
+            if (calendarViewMode == CalendarViewModel.Week || calendarViewMode== CalendarViewModel.WorkWeek || calendarViewMode == CalendarViewModel.Day ||calendarViewMode== CalendarViewModel.MonthWeek)
             {
                 int i = 0;
                 //对任务事件位置进行排序
@@ -2965,6 +2979,14 @@ namespace JsmCalendar
             return Convert.ToInt32(Math.Ceiling((currentDay - firstWeekend) / 7.0)) + 1;
         }
 
+        private string GetWeekString(int index)
+        {
+            if (index > 6) index = 0;
+
+            string[] weekArray = new string[] { "星期天", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六" };
+
+            return weekArray[index];
+        }
 
         public void AddTask(TaskEventNode task)
         {
@@ -3029,14 +3051,10 @@ namespace JsmCalendar
                         {
                             dtNodeMax = new DateTime(node.Date.Year, node.Date.Month, node.Date.Day, 23, 59, 59);
                         }
-                        else if (calendarViewMode == CalendarViewModel.Week || calendarViewMode== CalendarViewModel.WorkWeek)
+                        else if (calendarViewMode == CalendarViewModel.Week || calendarViewMode== CalendarViewModel.WorkWeek || calendarViewMode == CalendarViewModel.Day || calendarViewMode== CalendarViewModel.MonthWeek)
                         {
                             dtNodeMax = new DateTime(node.Date.Year, node.Date.Month, node.Date.Day, node.Date.Hour, node.Date.Minute, 59);
-                        }
-                        else if (calendarViewMode == CalendarViewModel.Day)
-                        {
-                            dtNodeMax = new DateTime(node.Date.Year, node.Date.Month, node.Date.Day, node.Date.Hour, node.Date.Minute, 59);
-                        }
+                        } 
                         else if (calendarViewMode == CalendarViewModel.TimeSpan)
                         {
                             dtNodeMax = new DateTime(node.Date.Year, node.Date.Month, node.Date.Day, node.Date.Hour, node.Date.Minute, 59);
@@ -3066,14 +3084,10 @@ namespace JsmCalendar
                     {
                         dtNodeMax = new DateTime(node.Date.Year, node.Date.Month, node.Date.Day, 23, 59, 59);
                     }
-                    else if (calendarViewMode== CalendarViewModel.Week ||calendarViewMode == CalendarViewModel.WorkWeek)
+                    else if (calendarViewMode == CalendarViewModel.Week || calendarViewMode == CalendarViewModel.WorkWeek || calendarViewMode == CalendarViewModel.Day || calendarViewMode== CalendarViewModel.MonthWeek)
                     { 
                         dtNodeMax = new DateTime(node.Date.Year, node.Date.Month, node.Date.Day, node.Date.Hour, node.Date.Minute, 59);
-                    }
-                    else if(calendarViewMode== CalendarViewModel.Day)
-                    {
-                        dtNodeMax = new DateTime(node.Date.Year, node.Date.Month, node.Date.Day, node.Date.Hour, node.Date.Minute, 59); 
-                    }
+                    } 
                     else if(calendarViewMode== CalendarViewModel.TimeSpan)
                     {
                         dtNodeMax = new DateTime(node.Date.Year, node.Date.Month, node.Date.Day, node.Date.Hour, node.Date.Minute, 59);  
@@ -3093,7 +3107,7 @@ namespace JsmCalendar
         private int vsize, hsize;
         public override void AdjustScrollbars()
         {
-            if((calendarViewMode== CalendarViewModel.Week || calendarViewMode== CalendarViewModel.WorkWeek || calendarViewMode== CalendarViewModel.Day) && nodes.Count>0)
+            if((calendarViewMode== CalendarViewModel.Week || calendarViewMode== CalendarViewModel.WorkWeek || calendarViewMode== CalendarViewModel.Day || calendarViewMode== CalendarViewModel.MonthWeek) && nodes.Count>0)
             { 
                 allRowsHeight = 0;
                 int rowCount = 24*2;
@@ -3321,13 +3335,14 @@ namespace JsmCalendar
 
         private void RenderMonthDateNode(TreeListNode node, Graphics g, Rectangle r, int level)
         { 
+            //定位日期所在的位置
             int row =node.Row;  //日期所在行  
             int col = node.Col;  //日期所在列
              
             int lb = lfWidth;
             int hb = headerBuffer;
             int tb = 1;
-            Rectangle sr = new Rectangle(r.Left + itemwidth * col + lb - hscrollBar.Value, r.Top + itemheight * row + tb + hb - vscrollBar.Value, itemwidth, itemheight);
+            Rectangle sr = new Rectangle(r.Left + (int)(itemwidth * col) + lb - hscrollBar.Value, r.Top + itemheight * row + tb + hb - vscrollBar.Value, (int)itemwidth, itemheight);
             if(col == colCount-1 && sr.Right<r.Right)
             {
                 sr = new Rectangle(sr.Left, sr.Top, sr.Width + (r.Right - sr.Right), sr.Height);
@@ -3428,9 +3443,9 @@ namespace JsmCalendar
             int row = node.Row;  //日期所在行  
             int col = node.Col;  //日期所在列
 
-            int lb = lfWidth;
+            int lb = lfWidth+2;
             int hb = headerBuffer + ltHeight;
-            Rectangle sr = new Rectangle(r.Left + itemwidth * col + lb - hscrollBar.Value, r.Top + itemheight * row + hb + 2 - vscrollBar.Value, itemwidth, itemheight);
+            Rectangle sr = new Rectangle(r.Left + (int)(itemwidth * col) + lb - hscrollBar.Value, r.Top + itemheight * row + hb + 2 - vscrollBar.Value, (int)itemwidth, itemheight);
             if (sr.Top > hb)
             {
                 g.Clip = new Region(sr);
@@ -3442,13 +3457,18 @@ namespace JsmCalendar
                 g.Clip = new Region(rh);
             }
 
+            if(col>5)
+            {
 
-            if (sr.Top < hb - 20) return; 
-            Rectangle srNode = new Rectangle(sr.Left + 8, sr.Top, sr.Width - 8, sr.Height);
+            }
+
+            if (sr.Top < hb - 20) return;
+            //Rectangle srNode = new Rectangle(sr.Left + 8, sr.Top, sr.Width - 8, sr.Height);
+            Rectangle srNode = new Rectangle(sr.Left , sr.Top, sr.Width , sr.Height);
             nodeRowRects.Add(srNode, node);
 
             //填充日期区域背景颜色
-            g.FillRectangle(new SolidBrush(node.BackColor), sr);
+            g.FillRectangle(new SolidBrush(node.BackColor), sr); 
             //绘制日期区域边框
 
             Pen p = new Pen(Color.SaddleBrown);
@@ -3459,7 +3479,7 @@ namespace JsmCalendar
             g.FillRectangle(new SolidBrush(Color.White), sr.Left, sr.Top, 8, itemheight); 
             if (row != 0)
                 g.DrawLine(p, srNode.Left, srNode.Top, srNode.Right, srNode.Top);  //顶部 
-            g.DrawLine(Pens.Black, srNode.Left, srNode.Top, srNode.Left, srNode.Bottom);  //左侧
+            //g.DrawLine(Pens.Black, srNode.Left, srNode.Top, srNode.Left, srNode.Bottom);  //左侧
             g.DrawLine(Pens.Black, srNode.Right - 1, srNode.Top, srNode.Right - 1, srNode.Bottom);   //右侧
             g.DrawLine(p, srNode.Left, srNode.Bottom, srNode.Right, srNode.Bottom);
             //绘制选中节点
@@ -3481,7 +3501,7 @@ namespace JsmCalendar
             int lb = lfWidth;
             int hb = headerBuffer+ltHeight;
             int tb = 0;
-            Rectangle sr = new Rectangle(r.Left + itemwidth * col + lb - hscrollBar.Value, r.Top + itemheight * row + tb + hb - vscrollBar.Value, itemwidth, itemheight);
+            Rectangle sr = new Rectangle(r.Left + (int)(itemwidth * col) + lb - hscrollBar.Value, r.Top + itemheight * row + tb + hb - vscrollBar.Value, (int)itemwidth, itemheight);
             if (col == colCount - 1 && sr.Right < r.Right)
             {
                 sr = new Rectangle(sr.Left, sr.Top, sr.Width + (r.Right - sr.Right), sr.Height);
@@ -3515,10 +3535,11 @@ namespace JsmCalendar
         }
 
         private void RenderWeekLeftInfo(Graphics g, Rectangle r, int level)
-        { 
+        {
+            int lb = lfWidth+2;
             if(ltHeight>0)
             {
-                Rectangle srArea = new Rectangle(r.Left + 0 - hscrollBar.Value, r.Top + headerBuffer + 1, lfWidth, ltHeight);
+                Rectangle srArea = new Rectangle(r.Left + 0 - hscrollBar.Value, r.Top + headerBuffer + 1, lb, ltHeight);
                 g.Clip = new Region(srArea);
 
                 //填充跨区域背景颜色
@@ -3535,7 +3556,6 @@ namespace JsmCalendar
             }
             for(int i=0;i<24;i++)
             {
-                int lb = lfWidth;
                 int hb = headerBuffer+ ltHeight;;
                 Rectangle sr = new Rectangle(r.Left + 0 - hscrollBar.Value, r.Top + itemheight * 2 * i + hb +1- vscrollBar.Value, lb, itemheight * 2);
                 if (sr.Top > hb)
@@ -3625,7 +3645,7 @@ namespace JsmCalendar
             {
                 if (!(nodes[i].Date.Year == dtFirstNode.Year && nodes[i].Date.Month == dtFirstNode.Month && nodes[i].Date.Day == dtFirstNode.Day) || i == nodes.Count - 1)
                 {
-                    int width = itemwidth * (i - startColIndex);
+                    int width = (int)(itemwidth * (i - startColIndex));
 
                     g.Clip = new Region(new Rectangle(r.Left, r.Top + headerBuffer, r.Width, ltHeight));
                     //绘制新的日期标题
@@ -3644,7 +3664,7 @@ namespace JsmCalendar
                     Font textFont = new Font("微软雅黑", 9.0f);
                     for (int m = startColIndex; m <= i; m+=2)
                     {
-                        int ml = rectTime.Left + itemwidth * (m - startColIndex);
+                        int ml = rectTime.Left + (int)(itemwidth * (m - startColIndex));
 
                         string sp = nodes[m].Date.ToString("HH:mm");
                         g.DrawLine(Pens.SteelBlue, ml, rectTime.Top, ml, rectTime.Top + rectTime.Height);
@@ -3656,7 +3676,7 @@ namespace JsmCalendar
                     //绘制标尺
                     for (int m = startColIndex; m <= i;m++ )
                     {
-                        int ml = rectSpan.Left + itemwidth * (m - startColIndex);
+                        int ml = rectSpan.Left + (int)(itemwidth * (m - startColIndex));
                         g.DrawLine(Pens.SteelBlue, ml, rectSpan.Top, ml, rectSpan.Top + rectSpan.Height);
                     }
 
@@ -3739,7 +3759,7 @@ namespace JsmCalendar
                 int col = taskEvent.RelateNodes[0].Col;  //日期所在列
 
                 //日期绘制区域
-                Rectangle sr = new Rectangle(r.Left + itemwidth * col + lb - hscrollBar.Value, r.Top + itemheight * row + hb + 2 - vscrollBar.Value, itemwidth, itemheight);
+                Rectangle sr = new Rectangle(r.Left + (int)(itemwidth * col) + lb - hscrollBar.Value, r.Top + itemheight * row + hb + 2 - vscrollBar.Value, (int)itemwidth, itemheight);
                 g.Clip = new Region(sr); 
 
                 Rectangle rcTask = new Rectangle(sr.Left + 4 - hscrollBar.Value, sr.Top + lh + 4 - vscrollBar.Value, sr.Width-4, taskHeight);
@@ -3814,7 +3834,7 @@ namespace JsmCalendar
 
                 List<Rectangle> rectRows = new List<Rectangle>();
                 //日期绘制区域 
-                Rectangle sr = new Rectangle(r.Left + itemwidth * col + lb - hscrollBar.Value, r.Top + itemheight * row + hb + 2 - vscrollBar.Value, itemwidth, itemheight);
+                Rectangle sr = new Rectangle(r.Left + (int)(itemwidth * col) + lb - hscrollBar.Value, r.Top + itemheight * row + hb + 2 - vscrollBar.Value, (int)itemwidth, itemheight);
                 Rectangle rcTask = new Rectangle(sr.Left - hscrollBar.Value, sr.Top + lh + 4 - vscrollBar.Value, sr.Width, taskHeight);
                 rectRows.Add(rcTask);
 
@@ -3827,12 +3847,12 @@ namespace JsmCalendar
                     {
                         //增加宽度
                         Rectangle rr = rectRows[rectRows.Count - 1];
-                        rr = new Rectangle(rr.Left, rr.Top, rr.Width +itemwidth, rr.Height);
+                        rr = new Rectangle(rr.Left, rr.Top, rr.Width + (int)itemwidth, rr.Height);
                         rectRows[rectRows.Count - 1] = rr;
                     }
                     else  //另一行显示
                     {
-                        Rectangle sr2 = new Rectangle(r.Left + itemwidth * col - hscrollBar.Value, r.Top + itemheight * row + hb + 2 - vscrollBar.Value, itemwidth, itemheight);
+                        Rectangle sr2 = new Rectangle(r.Left + (int)(itemwidth * col) - hscrollBar.Value, r.Top + itemheight * row + hb + 2 - vscrollBar.Value, (int)itemwidth, itemheight);
                         Rectangle rcTask2 = new Rectangle(sr2.Left +lb- hscrollBar.Value, sr2.Top + lh + 4 - vscrollBar.Value, sr2.Width, taskHeight);
                         rectRows.Add(rcTask2);
                         firstRow = row;
@@ -3969,8 +3989,7 @@ namespace JsmCalendar
             int lb = lfWidth;
             //绘制事件信息
 
-            textFont = new System.Drawing.Font("微软雅黑", 8.0f);
-            int lh = 22;
+            textFont = new System.Drawing.Font("微软雅黑", 8.0f); 
             // 没有关联的日期显示在当前区域，不绘制
             if (taskEvent.RelateNodes.Count == 0) return;
 
@@ -3978,27 +3997,10 @@ namespace JsmCalendar
             int dayCount = 1;
             for (int i = 1; i < taskEvent.RelateNodes.Count; i++)
             {
-                //是否绘制开始时间
-                bool isInNode = true;
-                if (taskEvent.RelateNodes[0].Date > taskEvent.StartTime)
-                {
-                    isInNode = false;
-                }
-
-                DateTime dtMinTaskEnd = new DateTime(taskEvent.EndTime.Year, taskEvent.EndTime.Month, taskEvent.EndTime.Day, 0, 0, 0);
-                if (taskEvent.RelateNodes[taskEvent.RelateNodes.Count - 1].Date < dtMinTaskEnd)
-                {
-                    isInNode = false;
-                }
-                if (isInNode == false)
-                {
-                    dayCount++;
-                    break;
-                }
-
-                if(taskEvent.RelateNodes[i].Date.Year ==taskEvent.RelateNodes[i-1].Date.Year
-                   && taskEvent.RelateNodes[i].Date.Month ==taskEvent.RelateNodes[i-1].Date.Month
-                   && taskEvent.RelateNodes[i].Date.Day ==taskEvent.RelateNodes[i-1].Date.Day)
+                //是否绘制开始时间   
+                if (taskEvent.RelateNodes[i].Date.Year == taskEvent.RelateNodes[i - 1].Date.Year
+                   && taskEvent.RelateNodes[i].Date.Month == taskEvent.RelateNodes[i - 1].Date.Month
+                   && taskEvent.RelateNodes[i].Date.Day == taskEvent.RelateNodes[i - 1].Date.Day)
                 {
                     continue;
                 }
@@ -4006,11 +4008,23 @@ namespace JsmCalendar
                 {
                     dayCount++;
                 }
+            } 
+
+            //任务是否有节点不再当前区域
+            bool isInNode = true;
+            if (taskEvent.RelateNodes[0].Date > taskEvent.StartTime)
+            {
+                isInNode = false;
             }
 
-            //1.只关联一个日期区域，绘制在当前日期内
-            if (dayCount==1)
+            DateTime dtMin = new DateTime(taskEvent.EndTime.Year, taskEvent.EndTime.Month, taskEvent.EndTime.Day, 0, 0, 0);
+            if (taskEvent.RelateNodes[taskEvent.RelateNodes.Count - 1].Date < dtMin)
             {
+                isInNode = false;
+            }  
+            //1.只关联一个日期区域，绘制在当前日期内
+            if (isInNode && dayCount==1)
+            { 
                 //任务事件绘制区域
                 int row = taskEvent.RelateNodes[0].Row;  //开始区域所在行  
                 int col = taskEvent.RelateNodes[0].Col;  //开始区域所在列 
@@ -4018,9 +4032,9 @@ namespace JsmCalendar
 
                 int subCol = taskEvent.ColSubIndex;
                 int subCount = taskEvent.ColSubCount > 0 ? taskEvent.ColSubCount : 1;
-                int taskWidth = (itemwidth - 4 * subCount) / subCount;
+                int taskWidth = (int)((itemwidth - 4 * subCount) / subCount);
                 int lp = subCol == 0 ? 0 : 4;
-                Rectangle sr = new Rectangle(r.Left + itemwidth * col + taskWidth * subCol + subCol *4+ lb - hscrollBar.Value, r.Top + itemheight * row + hb + 2 - vscrollBar.Value, taskWidth, itemheight * rowCount + 1);
+                Rectangle sr = new Rectangle(r.Left + (int)(itemwidth * col) + taskWidth * subCol + subCol * 4 + lb - hscrollBar.Value, r.Top + itemheight * row + hb + 2 - vscrollBar.Value, taskWidth, itemheight * rowCount + 1);
                 if (sr.Top > hb)
                 {
                     g.Clip = new Region(sr);
@@ -4063,11 +4077,11 @@ namespace JsmCalendar
                 }  
             }
             else  //关联多个绘制区域
-            {
+            { 
                 int row = taskEvent.AreaIndex-1;  //使用区域个数下标
                 int col = taskEvent.RelateNodes[0].Col;
                 //日期绘制区域 
-                Rectangle sr = new Rectangle(r.Left + itemwidth * col + lb - hscrollBar.Value, r.Top + headerBuffer + 4 + row*(itemheight+5), itemwidth * dayCount-4, itemheight);
+                Rectangle sr = new Rectangle(r.Left + (int)(itemwidth * col) + lb - hscrollBar.Value, r.Top + headerBuffer + 4 + row * (itemheight + 5), (int)(itemwidth * dayCount), itemheight);
                 
                 if(sr.Left<0)
                 {
@@ -4173,7 +4187,7 @@ namespace JsmCalendar
 
             List<Rectangle> rectRows = new List<Rectangle>();
             //日期绘制区域 
-            Rectangle sr = new Rectangle(r.Left + itemwidth * col + lb - hscrollBar.Value, r.Top + itemheight * row + hb + 2 - vscrollBar.Value, itemwidth, itemheight);
+            Rectangle sr = new Rectangle(r.Left + (int)(itemwidth * col) + lb - hscrollBar.Value, r.Top + itemheight * row + hb + 2 - vscrollBar.Value, (int)itemwidth, itemheight);
             Rectangle rcTask = new Rectangle(sr.Left, sr.Top + lh + 4, sr.Width, taskHeight);
             rectRows.Add(rcTask);
 
@@ -4186,7 +4200,7 @@ namespace JsmCalendar
                 {
                     //增加宽度
                     Rectangle rr = rectRows[rectRows.Count - 1];
-                    rr = new Rectangle(rr.Left, rr.Top, rr.Width + itemwidth, rr.Height);
+                    rr = new Rectangle(rr.Left, rr.Top, rr.Width + (int)itemwidth, rr.Height);
                     rectRows[rectRows.Count - 1] = rr;
                 }
             }
