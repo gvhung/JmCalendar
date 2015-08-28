@@ -2020,7 +2020,7 @@ namespace JsmCalendar
             {
                 colCount = 7;
                 itemwidth = r.Width / colCount;
-                itemheight = (r.Height - headerBuffer) / 5;
+                itemheight = (r.Height - headerBuffer) / (nodes.Count > 35 ? 6 : 5);
                 ltHeight = 0;
                 AdjustScrollbars();
                 for (i = 0; i < nodes.Count; i++)
@@ -3353,6 +3353,10 @@ namespace JsmCalendar
             int row =node.Row;  //日期所在行  
             int col = node.Col;  //日期所在列
              
+            if(row==5)
+            {
+
+            }
             int lb = lfWidth;
             int hb = headerBuffer;
             int tb = 1;
