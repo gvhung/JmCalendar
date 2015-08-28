@@ -247,8 +247,15 @@ namespace JsmCalendar
             get { return location; }
             set { location = value; }
         }
-        private DateTime startTime = DateTime.Now;
+        private string userName = "";
 
+        public string UserName
+        {
+            get { return userName; }
+            set { userName = value; }
+        }
+        private DateTime startTime = DateTime.Now;
+         
         public DateTime StartTime
         {
             get { return startTime; }
@@ -335,12 +342,20 @@ namespace JsmCalendar
             get { return colSubCount; }
             set { colSubCount = value; }
         }
-         
-        public TaskEventNode(string title,string content,string location,DateTime dtStart,DateTime dtEnd)
+
+        private bool visible = true;
+
+        public bool Visible
+        {
+            get { return visible; }
+            set { visible = value; }
+        }
+        public TaskEventNode(string title,string content,string location,string userName,DateTime dtStart,DateTime dtEnd)
         {
             this.title = title;
             this.content = content;
             this.location = location;
+            this.userName = userName;
             this.startTime = dtStart;
             this.endTime = dtEnd;
             relateNodes = new List<TreeListNode>();
@@ -2053,14 +2068,23 @@ namespace JsmCalendar
                 itemheight = 20;
                 ltHeight = 0;
 
+                int th = 15;
                 //跨区域任务 
                 foreach (TaskEventNode taskEvent in taskEventNodes)
                 {
                     int dayCount = 1;
+
+                    //任务是否有节点不再当前区域
+                    bool isInNode = true;
+
+                    if (taskEvent.Visible==false || taskEvent.RelateNodes.Count<1)
+                    {
+                        continue;
+                    }
                     for (i = 1; i < taskEvent.RelateNodes.Count; i++)
                     {
                         //是否绘制开始时间
-                        bool isInNode = true;
+                        isInNode = true;
                         if (taskEvent.RelateNodes[0].Date > taskEvent.StartTime)
                         {
                             isInNode = false;
@@ -2088,11 +2112,11 @@ namespace JsmCalendar
                             dayCount++;
                         }
                     }
-                    if (dayCount > 1)
+                    if ((dayCount > 1 || calendarViewMode == CalendarViewModel.MonthWeek))
                     {
-                        ltHeight += 30;
+                        ltHeight += (itemheight+th);
 
-                        taskEvent.AreaIndex = ltHeight / 30;
+                        taskEvent.AreaIndex = ltHeight / (itemheight + th);
                     }
                 }
 
@@ -2108,8 +2132,8 @@ namespace JsmCalendar
                     RenderWeekDateNode(nodes[i], g, r, 0);
                 }
                 for (i = 0; i < taskEventNodes.Count; i++)
-                {
-                    RenderWeekTaskEventNode(taskEventNodes[i], g, r, 0);
+                { 
+                    RenderWeekTaskEventNode(taskEventNodes[i], g, r, th);
                 }
             }
             else if(calendarViewMode== CalendarViewModel.Year)
@@ -2229,6 +2253,7 @@ namespace JsmCalendar
             }
             else if (calendarViewMode == CalendarViewModel.Week || calendarViewMode == CalendarViewModel.WorkWeek || calendarViewMode == CalendarViewModel.Day || calendarViewMode== CalendarViewModel.MonthWeek)
             {
+                //当前视图包含日期天数
                 int days = 1;
                 if(calendarViewMode== CalendarViewModel.Day)
                 {
@@ -2286,9 +2311,10 @@ namespace JsmCalendar
                     g.DrawRectangle(Pens.LightSteelBlue, rect);
                     //绘制标题文本
 
-                    string sp = TruncatedString(dayInfo, width, 25, g);
+                    string sp = TruncatedString(dayInfo, width+10, 25, g);
                     Font textFont = new System.Drawing.Font("微软雅黑", 10.0f);
-                    g.DrawString(sp, textFont, SystemBrushes.ControlText, (float)(lp_scr + lf + last + (width / 2) - (Helpers.StringTools.MeasureDisplayStringWidth(g, sp, this.Font) / 2)), (float)(r.Top + 4 + headerBuffer - lh));
+                    //g.DrawString(sp, textFont, SystemBrushes.ControlText, (float)(lp_scr + lf + last -4+ (width / 2) - (Helpers.StringTools.MeasureDisplayStringWidth(g, sp, this.Font) / 2)), (float)(r.Top + 4 + headerBuffer - lh));
+                    g.DrawString(sp, textFont, SystemBrushes.ControlText, (float)(lp_scr + lf + last +4), (float)(r.Top + 4 + headerBuffer - lh));
 
                     last += width;
                 }
@@ -4029,6 +4055,8 @@ namespace JsmCalendar
             taskEvent.RectAreas.Clear();
             taskEvent.TitleAreas.Clear();
 
+            if (taskEvent.Visible == false) return;
+
             Font textFont = Font;
             int hb = headerBuffer + ltHeight;
             int lb = lfWidth;
@@ -4068,7 +4096,7 @@ namespace JsmCalendar
                 isInNode = false;
             }  
             //1.只关联一个日期区域，绘制在当前日期内
-            if (isInNode && dayCount==1)
+            if (isInNode && dayCount==1 && calendarViewMode!= CalendarViewModel.MonthWeek)
             { 
                 //任务事件绘制区域
                 int row = taskEvent.RelateNodes[0].Row;  //开始区域所在行  
@@ -4125,8 +4153,10 @@ namespace JsmCalendar
             { 
                 int row = taskEvent.AreaIndex-1;  //使用区域个数下标
                 int col = taskEvent.RelateNodes[0].Col;
+                 
+                int th = level;
                 //日期绘制区域 
-                Rectangle sr = new Rectangle(r.Left + (int)(itemwidth * col) + lb - hscrollBar.Value, r.Top + headerBuffer + 4 + row * (itemheight + 5), (int)(itemwidth * dayCount), itemheight);
+                Rectangle sr = new Rectangle(r.Left + (int)(itemwidth * col) + lb - hscrollBar.Value, r.Top + headerBuffer + 4 + row * (itemheight + th), (int)(itemwidth * dayCount), itemheight);
                 
                 if(sr.Left<0)
                 {
@@ -4136,7 +4166,9 @@ namespace JsmCalendar
                 {
                     sr = new Rectangle(sr.Left, sr.Top, sr.Width - (sr.Right - r.Right)-vsize-4, sr.Height);
                 }
-                g.Clip = new Region(sr);
+                Rectangle srClip = new Rectangle(sr.Left,sr.Top,sr.Width,sr.Height+th);
+
+                g.Clip = new Region(srClip);
                 taskEvent.RectAreas.Add(sr);
 
                 if (taskEvent.Selected == true)
@@ -4177,12 +4209,16 @@ namespace JsmCalendar
                 taskEvent.TitleAreas.Add(rcTaskTitle);
 
                 string sp = TruncatedString(taskEvent.Title, rcTaskTitle.Width, 5, g);
+                string userName = TruncatedString(taskEvent.UserName, sr.Width, 5, g);
+                string timeLong = (taskEvent.EndTime - taskEvent.StartTime).Hours + "." + (taskEvent.EndTime - taskEvent.StartTime).Minutes*1.0f/60*10 + "小时";
                 if (taskEvent.Selected == true)
                 {  
                     if (isDrawStart)
                         g.DrawString(ts, textFont, taskEventSelectBrush, (float)(sr.Left), (float)(sr.Top + 3));
                     //居中绘制
                     g.DrawString(sp, textFont, taskEventSelectBrush, (float)(rcTaskTitle.Left + rcTaskTitle.Width / 2 - (Helpers.StringTools.MeasureDisplayStringWidth(g, sp, this.Font) / 2)), (float)(rcTaskTitle.Top + 3));
+                    g.DrawString(timeLong, textFont, new SolidBrush(taskEvent.ForeColor), (float)(sr.Left + sr.Width / 2 - (Helpers.StringTools.MeasureDisplayStringWidth(g, timeLong, this.Font) / 2)), (float)(sr.Top + itemheight));
+                 
                     //绘制结束时间
                     if (isDrawEnd)
                     {
@@ -4197,6 +4233,7 @@ namespace JsmCalendar
                         g.DrawString(ts, textFont, new SolidBrush(taskEvent.ForeColor), (float)(sr.Left), (float)(sr.Top + 3));
                     //居中绘制
                     g.DrawString(sp, textFont, new SolidBrush(taskEvent.ForeColor), (float)(rcTaskTitle.Left + rcTaskTitle.Width / 2 - (Helpers.StringTools.MeasureDisplayStringWidth(g, sp, this.Font) / 2)), (float)(rcTaskTitle.Top + 3));
+                    g.DrawString(timeLong, textFont, new SolidBrush(taskEvent.ForeColor), (float)(sr.Left + sr.Width / 2 - (Helpers.StringTools.MeasureDisplayStringWidth(g, timeLong, this.Font) / 2)), (float)(sr.Top + itemheight));
                      
                     if (isDrawEnd)
                     {
