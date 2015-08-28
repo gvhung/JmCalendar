@@ -434,8 +434,9 @@ namespace JsmCalendar
         private int week = 0; 
         private int year = 0; 
         private int month = 0; 
-        private int day = 0; 
+        private int day = 0;
         private bool isToday = false;
+        private bool isHoliady = false;
 
         private ChineseDate chinesDate;
         private List<TaskEventNode> relateTasks;
@@ -443,6 +444,7 @@ namespace JsmCalendar
         private int col = 0;
 
         private bool isBlankNode = false;
+
 
        
 
@@ -716,6 +718,13 @@ namespace JsmCalendar
             get { return isToday; }
             set { isToday = value; }
         }
+         
+        public bool IsHoliady
+        {
+            get { return isHoliady; }
+            set { isHoliady = value; }
+        }
+        
         public List<TaskEventNode> RelateTasks
         {
             get { return relateTasks; }
@@ -2092,7 +2101,7 @@ namespace JsmCalendar
 
                 itemwidth = (r.Width - lfWidth - vsize) / colCount;
                 //绘制左侧小时
-                RenderWeekLeftInfo(g, r, 0);
+                RenderWeekLeftInfo(g, r, colCount);
                 //绘制每个小时节点
                 for (i = 0; i < nodes.Count; i++)
                 {
@@ -2258,7 +2267,7 @@ namespace JsmCalendar
                     //绘制标题栏按钮  
                     int nodeIndex = 48 * i;
                     TreeListNode node = nodes[nodeIndex];
-                    string dayInfo =node.Day+"日";
+                    string dayInfo =node.Day.ToString();
                     if(days<=7)
                     {
                         dayInfo = node.Month + "月" + node.Day + "日"  + " " + GetWeekString(node.Week) + " " + node.ChinesDate.Cday; 
@@ -2809,7 +2818,12 @@ namespace JsmCalendar
                     TreeListNode dtNode2 = new TreeListNode(new DateTime(dt.Year, dt.Month, dt.Day, j, 30, 0));
                     dtNode2.Row = j * 2+1;
                     dtNode2.Col = i;
-                    nodes.Add(dtNode2); 
+                    nodes.Add(dtNode2);
+                    if (dtNode1.Week == 6 || dtNode1.Week == 0)
+                    {
+                        dtNode1.BackColor = Color.LightYellow;
+                        dtNode2.BackColor = Color.LightYellow;
+                    }
                 }
             } 
             BindTaskToNode();
@@ -3443,9 +3457,9 @@ namespace JsmCalendar
             int row = node.Row;  //日期所在行  
             int col = node.Col;  //日期所在列
 
-            int lb = lfWidth+2;
+            int lb = lfWidth+1;
             int hb = headerBuffer + ltHeight;
-            Rectangle sr = new Rectangle(r.Left + (int)(itemwidth * col) + lb - hscrollBar.Value, r.Top + itemheight * row + hb + 2 - vscrollBar.Value, (int)itemwidth, itemheight);
+            Rectangle sr = new Rectangle(r.Left + (int)(itemwidth * col) + lb - hscrollBar.Value, r.Top + itemheight * row + hb  +2-1- vscrollBar.Value, (int)itemwidth, itemheight);
             if (sr.Top > hb)
             {
                 g.Clip = new Region(sr);
@@ -3476,11 +3490,16 @@ namespace JsmCalendar
             {
                 p = new Pen(Color.NavajoWhite);
             }
+            Pen pr = new Pen(Color.LightSteelBlue,1.0f);
+            if(node.Week==0  || node.Week==5)
+            {
+                pr = new Pen(Color.SteelBlue, 1.0f);
+            }
             g.FillRectangle(new SolidBrush(Color.White), sr.Left, sr.Top, 8, itemheight); 
             if (row != 0)
                 g.DrawLine(p, srNode.Left, srNode.Top, srNode.Right, srNode.Top);  //顶部 
             //g.DrawLine(Pens.Black, srNode.Left, srNode.Top, srNode.Left, srNode.Bottom);  //左侧
-            g.DrawLine(Pens.Black, srNode.Right - 1, srNode.Top, srNode.Right - 1, srNode.Bottom);   //右侧
+            g.DrawLine(pr, srNode.Right - 1, srNode.Top, srNode.Right - 1, srNode.Bottom);   //右侧
             g.DrawLine(p, srNode.Left, srNode.Bottom, srNode.Right, srNode.Bottom);
             //绘制选中节点
             if (node.Selected)
@@ -3542,7 +3561,7 @@ namespace JsmCalendar
                 Rectangle srArea = new Rectangle(r.Left + 0 - hscrollBar.Value, r.Top + headerBuffer + 1, lb, ltHeight);
                 g.Clip = new Region(srArea);
 
-                //填充跨区域背景颜色
+                //填充左边空白区域背景颜色
                 g.FillRectangle(new SolidBrush(Color.FromArgb(237, 246, 245)), srArea);
                 g.DrawLine(Pens.LightSteelBlue, srArea.Left, srArea.Bottom-2, srArea.Right - 2, srArea.Bottom-2); 
                 g.DrawLine(Pens.LightSteelBlue, srArea.Right - 2, srArea.Top, srArea.Right - 2, srArea.Bottom);
@@ -3553,6 +3572,28 @@ namespace JsmCalendar
                 //填充跨区域背景颜色
                 g.FillRectangle(new SolidBrush(Color.FromArgb(207, 226, 225)), srAreaTask);
                 g.DrawLine(Pens.LightSteelBlue, srAreaTask.Left, srAreaTask.Bottom - 2, srAreaTask.Right - 2, srAreaTask.Bottom - 2); 
+                
+                //绘制日期线条
+                int left = srAreaTask.Left-1;
+                for (int i = 0; i < level; i++)
+                {
+                    TreeListNode node = nodes[i * 48];
+                    if(node.Week==6 || node.Week==0 || node.IsHoliady)
+                    {
+                        g.FillRectangle(new SolidBrush(Color.LightYellow),left+1,srAreaTask.Top+1,itemwidth-1,srAreaTask.Height-2-1);
+
+                    }
+
+                    Pen pr = new Pen(Color.LightSteelBlue, 1.0f);
+                    if (node.Week == 0 || node.Week == 5)
+                    {
+                        pr = new Pen(Color.SteelBlue, 1.0f);
+                    }
+                    left += itemwidth;
+                    g.DrawLine(pr,left, srAreaTask.Top +2 , left, srAreaTask.Bottom - 2);
+                    
+                    
+                }
             }
             for(int i=0;i<24;i++)
             {
