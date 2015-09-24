@@ -17,7 +17,7 @@ namespace WindowsFormsApplication1
         {
             InitializeComponent();
             this.calendarView1 = new CalendarView();
-            this.calendarView1.CalendarViewMode = CalendarViewModel.Month;
+            this.calendarView1.CalendarViewMode = CalendarViewModel.TimeSpan;
             this.calendarView1.TaskMouseClick += calendarView1_TaskMouseClick;
             panel1.Controls.Add(this.calendarView1);
             this.calendarView1.Dock = DockStyle.Fill;
@@ -31,10 +31,10 @@ namespace WindowsFormsApplication1
 
         int month = 7;
         private void Form1_Load(object sender, EventArgs e)
-        {
+        { 
             month = DateTime.Now.Month;
 
-            TaskEventNode taskEvent2 = new TaskEventNode("创建日程管理1", "完成日历控件", "公司","tl", new DateTime(2015, 8, 30, 11, 30, 0), new DateTime(2015, 9, 1, 12, 30, 0));
+            TaskEventNode taskEvent2 = new TaskEventNode("创建日程管理1", "完成日历控件", "公司","tl", new DateTime(2015, 8, 30, 0, 30, 0), new DateTime(2015, 8, 30, 12, 30, 0));
             this.calendarView1.AddTask(taskEvent2);
 
 
@@ -67,6 +67,24 @@ namespace WindowsFormsApplication1
             this.calendarView1.AddTask(taskEvent8);
 
 
+            TaskEventNode taskEvent10 = new TaskEventNode("创建日程管理4", "完成日历控件", "公司", "tl", new DateTime(2015, 9, 1, 9, 30, 0), new DateTime(2015, 9, 1, 13, 30, 0));
+            this.calendarView1.AddTask(taskEvent10);
+
+            TaskEventNode taskEvent11 = new TaskEventNode("创建日程管理4", "完成日历控件", "公司", "tl", new DateTime(2015, 9, 1, 10, 30, 0), new DateTime(2015, 9, 1, 13, 30, 0));
+            this.calendarView1.AddTask(taskEvent11);
+
+            TaskEventNode taskEvent12 = new TaskEventNode("创建日程管理4", "完成日历控件", "公司", "tl", new DateTime(2015, 9, 1, 8, 30, 0), new DateTime(2015, 9, 1, 13, 30, 0));
+            this.calendarView1.AddTask(taskEvent12);
+
+
+            TaskEventNode taskEvent13 = new TaskEventNode("创建日程管理4", "完成日历控件", "公司", "tl", new DateTime(2015, 9, 2, 9, 30, 0), new DateTime(2015, 9, 2, 13, 30, 0));
+            this.calendarView1.AddTask(taskEvent13);
+
+            TaskEventNode taskEvent14 = new TaskEventNode("创建日程管理4", "完成日历控件", "公司", "tl", new DateTime(2015, 9, 3, 10, 30, 0), new DateTime(2015, 9, 3, 13, 30, 0));
+            this.calendarView1.AddTask(taskEvent14);
+
+            TaskEventNode taskEvent15 = new TaskEventNode("创建日程管理4", "完成日历控件", "公司", "tl", new DateTime(2015, 9, 2, 8, 30, 0), new DateTime(2015, 9, 2, 13, 30, 0));
+            this.calendarView1.AddTask(taskEvent15);
             //TaskEventNode taskEvent8 = new TaskEventNode("创建日程管理4", "完成日历控件", "公司", new DateTime(2015, 7, 28, 16, 30, 0), new DateTime(2015, 7, 28, 17, 0, 0));
             //this.calendarView1.AddTask(taskEvent8);
 
@@ -138,7 +156,8 @@ namespace WindowsFormsApplication1
 
         private void toolStripButton10_Click(object sender, EventArgs e)
         {
-            this.calendarView1.TaskEventNodes[0].Visible = false;
+            this.calendarView1.GotoCalendarDate(DateTime.Now);
+            //this.calendarView1.TaskEventNodes[0].Visible = false;
             this.calendarView1.Invalidate();
         }
     }

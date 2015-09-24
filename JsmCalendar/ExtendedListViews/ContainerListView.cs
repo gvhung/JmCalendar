@@ -2266,6 +2266,10 @@ namespace JsmCalendar
 			{
 			}
 
+            if(sprint.Length<5 && sprint.IndexOf("...")>0)
+            {
+                sprint = "...";
+            }
 			return sprint;
 		}
 		// rendering helpers

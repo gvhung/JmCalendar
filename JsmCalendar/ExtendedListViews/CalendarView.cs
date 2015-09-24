@@ -2030,7 +2030,7 @@ namespace JsmCalendar
 
 
             nodeRowRects.Clear(); 
-
+             
             if(calendarViewMode== CalendarViewModel.Month)
             {
                 colCount = 7;
@@ -2047,28 +2047,28 @@ namespace JsmCalendar
                     RenderMonthTaskEventNode(taskEventNodes[i], g, r, 0);
                 }
             }
-            else if (calendarViewMode == CalendarViewModel.Week || calendarViewMode == CalendarViewModel.WorkWeek || calendarViewMode == CalendarViewModel.Day || calendarViewMode== CalendarViewModel.MonthWeek)
+            else if (calendarViewMode == CalendarViewModel.Week || calendarViewMode == CalendarViewModel.WorkWeek || calendarViewMode == CalendarViewModel.Day || calendarViewMode == CalendarViewModel.MonthWeek)
             {
                 if (calendarViewMode == CalendarViewModel.Week)
                 {
-                    colCount = 7; 
+                    colCount = 7;
                 }
-                else if(calendarViewMode== CalendarViewModel.WorkWeek)
+                else if (calendarViewMode == CalendarViewModel.WorkWeek)
                 {
                     colCount = 5;
                 }
-                else if ( calendarViewMode== CalendarViewModel.Day)
+                else if (calendarViewMode == CalendarViewModel.Day)
                 {
                     colCount = 1;
                 }
-                else if(calendarViewMode== CalendarViewModel.MonthWeek)
+                else if (calendarViewMode == CalendarViewModel.MonthWeek)
                 {
-                    colCount = System.Threading.Thread.CurrentThread.CurrentUICulture.Calendar.GetDaysInMonth(currentTime.Year, currentTime.Month); 
-                } 
+                    colCount = System.Threading.Thread.CurrentThread.CurrentUICulture.Calendar.GetDaysInMonth(currentTime.Year, currentTime.Month);
+                }
                 itemheight = 20;
                 ltHeight = 0;
 
-                int th = 15;
+                int th = 8;
                 //跨区域任务 
                 foreach (TaskEventNode taskEvent in taskEventNodes)
                 {
@@ -2077,7 +2077,7 @@ namespace JsmCalendar
                     //任务是否有节点不再当前区域
                     bool isInNode = true;
 
-                    if (taskEvent.Visible==false || taskEvent.RelateNodes.Count<1)
+                    if (taskEvent.Visible == false || taskEvent.RelateNodes.Count < 1)
                     {
                         continue;
                     }
@@ -2114,7 +2114,7 @@ namespace JsmCalendar
                     }
                     if ((dayCount > 1 || calendarViewMode == CalendarViewModel.MonthWeek))
                     {
-                        ltHeight += (itemheight+th);
+                        ltHeight += (itemheight + th);
 
                         taskEvent.AreaIndex = ltHeight / (itemheight + th);
                     }
@@ -2125,22 +2125,22 @@ namespace JsmCalendar
 
                 itemwidth = (r.Width - lfWidth - vsize) / colCount;
                 //绘制左侧小时
-                RenderWeekLeftInfo(g, r, colCount);
+                RenderWeekLeftInfo(g, r, colCount, th);
                 //绘制每个小时节点
                 for (i = 0; i < nodes.Count; i++)
                 {
                     RenderWeekDateNode(nodes[i], g, r, 0);
                 }
                 for (i = 0; i < taskEventNodes.Count; i++)
-                { 
+                {
                     RenderWeekTaskEventNode(taskEventNodes[i], g, r, th);
                 }
             }
-            else if(calendarViewMode== CalendarViewModel.Year)
-            { 
+            else if (calendarViewMode == CalendarViewModel.Year)
+            {
                 ltHeight = 0;
                 colCount = 37;
-                itemwidth = (r.Width - lfWidth) / colCount; 
+                itemwidth = (r.Width - lfWidth) / colCount;
                 itemheight = (r.Height - headerBuffer) / 12;
                 AdjustScrollbars();
 
@@ -2155,7 +2155,7 @@ namespace JsmCalendar
                     RenderMonthTaskEventNode(taskEventNodes[i], g, r, 0);
                 }
             }
-            else if(calendarViewMode == CalendarViewModel.TimeSpan)
+            else if (calendarViewMode == CalendarViewModel.TimeSpan)
             {
                 colCount = nodes.Count;
 
@@ -2207,16 +2207,20 @@ namespace JsmCalendar
             Font textHeader = new System.Drawing.Font("微软雅黑", 11.0f);
             Font textDate = new System.Drawing.Font("微软雅黑", 9.0f);
 
-            g.DrawString("日历", textHeader, new SolidBrush(Color.SteelBlue), 10, 10);
-            if(SelectedNode!=null)
+            string DateTitle = currentTime.Month + "月";
+            if (calendarViewMode == CalendarViewModel.Year)
             {
+                DateTitle = currentTime.Year.ToString();
+            }
+            g.DrawString(DateTitle, textHeader, new SolidBrush(Color.SteelBlue), 10, 10);
+            if(SelectedNode!=null)
+            { 
                 string[] weekArray = new string[] { "星期天", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六" };
                 string dateInfo = SelectedNode.Date.ToString("yyyy年MM月dd日") + " " + weekArray[SelectedNode.Week] + " " + SelectedNode.ChinesDate.Cdate;
                 string dayInfo = "第" + SelectedNode.Date.DayOfYear + "天";
-                g.DrawString(dateInfo, textDate, new SolidBrush(Color.SteelBlue), 50, 6);
-                g.DrawString(dayInfo, textDate, new SolidBrush(Color.SteelBlue), 50, 22);
-
-            }
+                g.DrawString(dateInfo, textDate, new SolidBrush(Color.SteelBlue), 60, 6);
+                g.DrawString(dayInfo, textDate, new SolidBrush(Color.SteelBlue), 60, 22);  
+            } 
 
             if( calendarViewMode== CalendarViewModel.Month)
             {
@@ -2287,6 +2291,7 @@ namespace JsmCalendar
                 g.DrawRectangle(Pens.LightSteelBlue, rect);
 
                 int width = (r.Width - lf - vsize) / days;
+                if (width <= 0) return;
                 for (i = 0; i < days; i++)
                 {
                     //绘制标题栏按钮  
@@ -2801,6 +2806,18 @@ namespace JsmCalendar
             //日历当前视图时间
             minTime = nodes[0].Date;
             maxTime = nodes[nodes.Count - 1].Date;
+             
+            foreach(TreeListNode node in nodes)
+            {
+                if(node.Date.Day== currentTime.Day && node.Date.Year== currentTime.Year && node.Date.Month== currentTime.Month)
+                { 
+                    node.Focused = true;
+                    node.Selected = true;
+                    this.SelectedNode = node;
+                    //selectedNode = node;
+                    break;
+                }
+            }
 
         }
         private void LoadCalendarWeekView(int dayCount)
@@ -2860,6 +2877,17 @@ namespace JsmCalendar
             minTime = nodes[0].Date;
             maxTime = nodes[nodes.Count - 1].Date;
 
+            foreach (TreeListNode node in nodes)
+            {
+                if (node.Date.Day == currentTime.Day && node.Date.Hour == currentTime.Hour && node.Date.Year == currentTime.Year && node.Date.Month == currentTime.Month)
+                {
+                    node.Focused = true;
+                    node.Selected = true;
+                    this.SelectedNode = node;
+                    //selectedNode = node;
+                    break;
+                }
+            }
         } 
 
         private void LoadCalendarYearView()
@@ -2925,6 +2953,18 @@ namespace JsmCalendar
             //日历当前视图时间
             minTime = nodes[0].Date;
             maxTime = nodes[nodes.Count - 1].Date;
+
+            foreach (TreeListNode node in nodes)
+            {
+                if (node.Date.Day == currentTime.Day &&node.Date.Year == currentTime.Year && node.Date.Month == currentTime.Month)
+                {
+                    node.Focused = true;
+                    node.Selected = true;
+                    this.SelectedNode = node;
+                    //selectedNode = node;
+                    break;
+                }
+            }
         }
 
         private void LoadCalendarTimeSpanView()
@@ -2958,6 +2998,19 @@ namespace JsmCalendar
             //日历当前视图时间
             minTime = nodes[0].Date;
             maxTime = nodes[nodes.Count - 1].Date;
+
+            foreach (TreeListNode node in nodes)
+            {
+                //当前时间
+                if (node.Date.Day == currentTime.Day && node.Date.Hour == DateTime.Now.Hour && node.Date.Year == currentTime.Year && node.Date.Month == currentTime.Month)
+                {
+                    node.Focused = true;
+                    node.Selected = true;
+                    this.SelectedNode = node;
+                    //selectedNode = node;
+                    break;
+                }
+            }
         }
           
 
@@ -2970,41 +3023,70 @@ namespace JsmCalendar
                 if (taskEventNodes.Count > 1)
                 {
                     //对所有的任务进行排序
-                    taskEventNodes.Sort();
+                    //taskEventNodes.Sort();
 
                     for (i = 0; i < taskEventNodes.Count; i++)
                     {
                         taskEventNodes[i].ColSubIndex = 0;
                         taskEventNodes[i].ColSubCount = 0; 
                     }
+
                     DateTime firstDay = taskEventNodes[0].StartTime;
                     int colSubIndex = 0;
+                    Dictionary<string, int> dcDates = new Dictionary<string, int>(); 
                     for (i = 0; i < taskEventNodes.Count; i++)
                     {
-                        if (taskEventNodes[i].StartTime.Year == firstDay.Year && taskEventNodes[i].StartTime.Month == firstDay.Month && taskEventNodes[i].StartTime.Day == firstDay.Day)
+                        string date = taskEventNodes[i].StartTime.ToString("yyyy-MM-dd");
+                        
+                        if(dcDates.ContainsKey(date))
                         {
-                            for (int j = 0; j < i; j++)
-                            {
-                                if (TaskTimeInArea(taskEventNodes[i], taskEventNodes[j]) || TaskTimeInArea(taskEventNodes[j], taskEventNodes[i]))
-                                {
-                                    taskEventNodes[i].ColSubIndex = taskEventNodes[j].ColSubIndex + 1; 
-                                }
-                            }
-
-                            for (int ix = colSubIndex; ix <= i; ix++)
-                            {
-                                if (taskEventNodes[i].ColSubIndex + 1 > taskEventNodes[ix].ColSubCount)
-                                { 
-                                    taskEventNodes[ix].ColSubCount = taskEventNodes[i].ColSubIndex + 1;
-                                }
-                            }
+                            dcDates[date] = dcDates[date] + 1;
                         }
                         else
                         {
-                            colSubIndex = i;  //日期开始下标
-                            firstDay = taskEventNodes[i].StartTime;
+                            dcDates.Add(date, 1);
                         }
                     }
+                    for (i = 0; i < taskEventNodes.Count; i++)
+                    {
+                        string date = taskEventNodes[i].StartTime.ToString("yyyy-MM-dd");
+                        taskEventNodes[i].ColSubCount = dcDates[date]; 
+                    } 
+
+                    for(i=taskEventNodes.Count-1;i>=0;i--)
+                    {
+                        string date = taskEventNodes[i].StartTime.ToString("yyyy-MM-dd");
+
+                        taskEventNodes[i].ColSubIndex = dcDates[date]-1;
+                        dcDates[date] = dcDates[date] - 1; 
+                    }
+
+                    //for (i = 0; i < taskEventNodes.Count; i++)
+                    //{
+                    //    if (taskEventNodes[i].StartTime.Year == firstDay.Year && taskEventNodes[i].StartTime.Month == firstDay.Month && taskEventNodes[i].StartTime.Day == firstDay.Day)
+                    //    {
+                    //        for (int j = 0; j < i; j++)
+                    //        {
+                    //            if (TaskTimeInArea(taskEventNodes[i], taskEventNodes[j]) || TaskTimeInArea(taskEventNodes[j], taskEventNodes[i]))
+                    //            {
+                    //                taskEventNodes[i].ColSubIndex = taskEventNodes[j].ColSubIndex + 1; 
+                    //            }
+                    //        }
+
+                    //        for (int ix = colSubIndex; ix <= i; ix++)
+                    //        {
+                    //            if (taskEventNodes[i].ColSubIndex + 1 > taskEventNodes[ix].ColSubCount)
+                    //            { 
+                    //                taskEventNodes[ix].ColSubCount = taskEventNodes[i].ColSubIndex + 1;
+                    //            }
+                    //        }
+                    //    }
+                    //    else
+                    //    {
+                    //        colSubIndex = i;  //日期开始下标
+                    //        firstDay = taskEventNodes[i].StartTime;
+                    //    }
+                    //}
                 } 
             }
            
@@ -3490,13 +3572,13 @@ namespace JsmCalendar
             int lb = lfWidth+1;
             int hb = headerBuffer + ltHeight;
             Rectangle sr = new Rectangle(r.Left + (int)(itemwidth * col) + lb - hscrollBar.Value, r.Top + itemheight * row + hb  +2-1- vscrollBar.Value, (int)itemwidth, itemheight);
-            if (sr.Top > hb)
+            if (sr.Top > headerBuffer)
             {
                 g.Clip = new Region(sr);
             }
             else
-            { 
-                int d = hb + 1 - sr.Top;
+            {
+                int d = headerBuffer + 1 - sr.Top;
                 Rectangle rh = new Rectangle(sr.Left, sr.Top + d, sr.Width, sr.Height - d);
                 g.Clip = new Region(rh);
             }
@@ -3506,7 +3588,7 @@ namespace JsmCalendar
 
             }
 
-            if (sr.Top < hb - 20) return;
+            if (sr.Top < headerBuffer) return;
             //Rectangle srNode = new Rectangle(sr.Left + 8, sr.Top, sr.Width - 8, sr.Height);
             Rectangle srNode = new Rectangle(sr.Left , sr.Top, sr.Width , sr.Height);
             nodeRowRects.Add(srNode, node);
@@ -3583,13 +3665,20 @@ namespace JsmCalendar
 
         }
 
-        private void RenderWeekLeftInfo(Graphics g, Rectangle r, int level)
+        private void RenderWeekLeftInfo(Graphics g, Rectangle r, int level,int lh)
         {
             int lb = lfWidth+2;
             if(ltHeight>0)
             {
-                Rectangle srArea = new Rectangle(r.Left + 0 - hscrollBar.Value, r.Top + headerBuffer + 1, lb, ltHeight);
-                g.Clip = new Region(srArea);
+                Rectangle srArea = new Rectangle(r.Left + 0 - hscrollBar.Value, r.Top + headerBuffer + 1 - vscrollBar.Value, lb, ltHeight);
+
+                Rectangle srClip = new Rectangle(srArea.Left, srArea.Top, srArea.Width, srArea.Height);
+                if (srArea.Top < headerBuffer)
+                {
+                    int b = headerBuffer - srArea.Top;
+                    srClip = new Rectangle(srArea.Left, srArea.Top+b, srArea.Width, srArea.Height-b);
+                }
+                g.Clip = new Region(srClip);
 
                 //填充左边空白区域背景颜色
                 g.FillRectangle(new SolidBrush(Color.FromArgb(237, 246, 245)), srArea);
@@ -3597,50 +3686,66 @@ namespace JsmCalendar
                 g.DrawLine(Pens.LightSteelBlue, srArea.Right - 2, srArea.Top, srArea.Right - 2, srArea.Bottom);
 
                 Rectangle srAreaTask = new Rectangle(srArea.Left+srArea.Width-1, srArea.Top, r.Width - srArea.Width-vsize-1, srArea.Height);
-                g.Clip = new Region(srAreaTask);
+                srClip = new Rectangle(srAreaTask.Left, srAreaTask.Top, srAreaTask.Width, srAreaTask.Height);
+                if (srAreaTask.Top < headerBuffer)
+                {
+                    int b = headerBuffer - srAreaTask.Top;
+                    srClip = new Rectangle(srAreaTask.Left, srAreaTask.Top + b, srAreaTask.Width, srAreaTask.Height - b);
+                }
+                g.Clip = new Region(srClip);
 
                 //填充跨区域背景颜色
                 g.FillRectangle(new SolidBrush(Color.FromArgb(207, 226, 225)), srAreaTask);
                 g.DrawLine(Pens.LightSteelBlue, srAreaTask.Left, srAreaTask.Bottom - 2, srAreaTask.Right - 2, srAreaTask.Bottom - 2); 
                 
                 //绘制日期线条
+
+                Pen pr = new Pen(Color.LightSteelBlue, 1.0f);
                 int left = srAreaTask.Left-1;
                 for (int i = 0; i < level; i++)
-                {
+                { 
                     TreeListNode node = nodes[i * 48];
+
+                    if (node.Week == 0 || node.Week == 5)
+                    {
+                        pr = new Pen(Color.SteelBlue, 1.0f);
+                    }
+                    else
+                    {
+                        pr = new Pen(Color.LightSteelBlue, 1.0f);
+                    }
                     if(node.Week==6 || node.Week==0 || node.IsHoliady)
                     {
                         g.FillRectangle(new SolidBrush(Color.LightYellow),left+1,srAreaTask.Top+1,itemwidth-1,srAreaTask.Height-2-1);
 
                     }
-
-                    Pen pr = new Pen(Color.LightSteelBlue, 1.0f);
-                    if (node.Week == 0 || node.Week == 5)
-                    {
-                        pr = new Pen(Color.SteelBlue, 1.0f);
-                    }
                     left += itemwidth;
-                    g.DrawLine(pr,left, srAreaTask.Top +2 , left, srAreaTask.Bottom - 2);
-                    
-                    
+                    g.DrawLine(pr,left, srAreaTask.Top +2 , left, srAreaTask.Bottom - 2); 
                 }
-            }
+
+                pr = new Pen(Color.LightSteelBlue, 1.0f);
+                int rowCount = ltHeight / (itemheight+lh);
+                for (int i = 1; i < rowCount; i++)
+                {
+                    g.DrawLine(pr, srAreaTask.Left, srAreaTask.Top + i * (itemheight + lh)-2, srAreaTask.Right, srAreaTask.Top + i * (itemheight + lh)-2);
+                }
+            } 
             for(int i=0;i<24;i++)
             {
                 int hb = headerBuffer+ ltHeight;;
                 Rectangle sr = new Rectangle(r.Left + 0 - hscrollBar.Value, r.Top + itemheight * 2 * i + hb +1- vscrollBar.Value, lb, itemheight * 2);
-                if (sr.Top > hb)
+                if (sr.Top > headerBuffer)
                 {
                     g.Clip = new Region(sr);
                 }
                 else
                 {
-                    int d = hb+1 - sr.Top;
+                    int d = headerBuffer + 1 - sr.Top;
                     Rectangle rh = new Rectangle(sr.Left, sr.Top + d, sr.Width, sr.Height - d);
                     g.Clip = new Region(rh);
                 }
 
-                if (sr.Top < hb - 22) continue;
+                if (sr.Top < headerBuffer) continue;
 
                 //填充日期区域背景颜色
                 g.FillRectangle(new SolidBrush(Color.FromArgb(237, 246, 245)), sr); 
@@ -3906,6 +4011,7 @@ namespace JsmCalendar
                 List<Rectangle> rectRows = new List<Rectangle>();
                 //日期绘制区域 
                 Rectangle sr = new Rectangle(r.Left + (int)(itemwidth * col) + lb - hscrollBar.Value, r.Top + itemheight * row + hb + 2 - vscrollBar.Value, (int)itemwidth, itemheight);
+
                 Rectangle rcTask = new Rectangle(sr.Left - hscrollBar.Value, sr.Top + lh + 4 - vscrollBar.Value, sr.Width, taskHeight);
                 rectRows.Add(rcTask);
 
@@ -3951,7 +4057,7 @@ namespace JsmCalendar
                 for (int i = 0; i < taskEvent.RectAreas.Count; i++)
                 { 
                     Rectangle rectTask = taskEvent.RectAreas[i];
-                    g.Clip = new Region(rectTask);
+                    g.Clip = new Region(rectTask); 
                     //绘制区域
                     if (taskEvent.Selected == true)
                     {
@@ -4096,7 +4202,7 @@ namespace JsmCalendar
                 isInNode = false;
             }  
             //1.只关联一个日期区域，绘制在当前日期内
-            if (isInNode && dayCount==1 && calendarViewMode!= CalendarViewModel.MonthWeek)
+            if (isInNode && dayCount == 1 && (calendarViewMode != CalendarViewModel.MonthWeek))
             { 
                 //任务事件绘制区域
                 int row = taskEvent.RelateNodes[0].Row;  //开始区域所在行  
@@ -4108,13 +4214,13 @@ namespace JsmCalendar
                 int taskWidth = (int)((itemwidth - 4 * subCount) / subCount);
                 int lp = subCol == 0 ? 0 : 4;
                 Rectangle sr = new Rectangle(r.Left + (int)(itemwidth * col) + taskWidth * subCol + subCol * 4 + lb - hscrollBar.Value, r.Top + itemheight * row + hb + 2 - vscrollBar.Value, taskWidth, itemheight * rowCount + 1);
-                if (sr.Top > hb)
+                if (sr.Top > headerBuffer)
                 {
                     g.Clip = new Region(sr);
                 }
                 else
                 {
-                    int d = hb + 1 - sr.Top;
+                    int d = headerBuffer + 1 - sr.Top;
                     Rectangle rh = new Rectangle(sr.Left, sr.Top + d, sr.Width, sr.Height - d);
                     g.Clip = new Region(rh);
                 } 
@@ -4149,14 +4255,14 @@ namespace JsmCalendar
                     g.DrawString(sp, textFont, new SolidBrush(taskEvent.ForeColor), (float)(rcTask.Left + 4), (float)(rcTask.Top + 4));
                 }  
             }
-            else  //关联多个绘制区域
+            else //关联多个绘制区域
             { 
                 int row = taskEvent.AreaIndex-1;  //使用区域个数下标
                 int col = taskEvent.RelateNodes[0].Col;
                  
                 int th = level;
                 //日期绘制区域 
-                Rectangle sr = new Rectangle(r.Left + (int)(itemwidth * col) + lb - hscrollBar.Value, r.Top + headerBuffer + 4 + row * (itemheight + th), (int)(itemwidth * dayCount), itemheight);
+                Rectangle sr = new Rectangle(r.Left + (int)(itemwidth * col) + lb - hscrollBar.Value, r.Top + headerBuffer + 4 + row * (itemheight + th) -vscrollBar.Value, (int)(itemwidth * dayCount), itemheight);
                 
                 if(sr.Left<0)
                 {
@@ -4166,8 +4272,23 @@ namespace JsmCalendar
                 {
                     sr = new Rectangle(sr.Left, sr.Top, sr.Width - (sr.Right - r.Right)-vsize-4, sr.Height);
                 }
-                Rectangle srClip = new Rectangle(sr.Left,sr.Top,sr.Width,sr.Height+th);
 
+
+                string userName = TruncatedString(taskEvent.UserName, sr.Width, 5, g);
+                string timeLong = (taskEvent.EndTime - taskEvent.StartTime).Hours + "." + (taskEvent.EndTime - taskEvent.StartTime).Minutes * 1.0f / 60 * 10 + "h";
+                int tlWidth = (int)g.MeasureString(timeLong, textFont).Width;
+
+                string ts = taskEvent.StartTime.ToString("HH:mm") + " ";
+                SizeF tsSize = g.MeasureString(ts, textFont);
+                int tsWidth = ((int)tsSize.Width);
+
+
+                Rectangle srClip = new Rectangle(sr.Left - tsWidth, sr.Top, sr.Width+(tsWidth +tsWidth), sr.Height + th);
+                if(sr.Top<headerBuffer)
+                {
+                    int b = headerBuffer - sr.Top;
+                    srClip = new Rectangle(sr.Left - tsWidth, sr.Top+b, sr.Width + (tsWidth + tsWidth), sr.Height + th-b);
+                }
                 g.Clip = new Region(srClip);
                 taskEvent.RectAreas.Add(sr);
 
@@ -4195,51 +4316,52 @@ namespace JsmCalendar
                 if (taskEvent.RelateNodes[taskEvent.RelateNodes.Count - 1].Date >= dtMinTaskEnd)
                 {
                     isDrawEnd = true;
-                } 
+                }
+                //int lf = isDrawStart ? tsWidth : 0;
+                //int lw = isDrawStart ? tsWidth : 0;
+                //lw = lw + (isDrawEnd ? tsWidth : 0);
 
-                string ts = taskEvent.StartTime.ToString("HH:mm") + " ";
-                SizeF tsSize = g.MeasureString(ts, textFont);
-                int tsWidth = ((int)tsSize.Width);
-
-                int lf = isDrawStart ? tsWidth : 0;
-                int lw = isDrawStart ? tsWidth : 0;
-                lw = lw + (isDrawEnd ? tsWidth : 0);
+                int lf = 0;
+                int lw = tlWidth+6; 
                 //任务事件标题绘制区域
                 Rectangle rcTaskTitle = new Rectangle(sr.Left + lf, sr.Top, sr.Width - lw, sr.Height);
                 taskEvent.TitleAreas.Add(rcTaskTitle);
 
-                string sp = TruncatedString(taskEvent.Title, rcTaskTitle.Width, 5, g);
-                string userName = TruncatedString(taskEvent.UserName, sr.Width, 5, g);
-                string timeLong = (taskEvent.EndTime - taskEvent.StartTime).Hours + "." + (taskEvent.EndTime - taskEvent.StartTime).Minutes*1.0f/60*10 + "小时";
+                string sp = TruncatedString(taskEvent.Title, rcTaskTitle.Width, 5, g); 
                 if (taskEvent.Selected == true)
                 {  
+                    //绘制开始日期
                     if (isDrawStart)
-                        g.DrawString(ts, textFont, taskEventSelectBrush, (float)(sr.Left), (float)(sr.Top + 3));
-                    //居中绘制
-                    g.DrawString(sp, textFont, taskEventSelectBrush, (float)(rcTaskTitle.Left + rcTaskTitle.Width / 2 - (Helpers.StringTools.MeasureDisplayStringWidth(g, sp, this.Font) / 2)), (float)(rcTaskTitle.Top + 3));
-                    g.DrawString(timeLong, textFont, new SolidBrush(taskEvent.ForeColor), (float)(sr.Left + sr.Width / 2 - (Helpers.StringTools.MeasureDisplayStringWidth(g, timeLong, this.Font) / 2)), (float)(sr.Top + itemheight));
-                 
+                        g.DrawString(ts, textFont, new SolidBrush(taskEvent.ForeColor), (float)(sr.Left - tsWidth - 2), (float)(sr.Top + 3)); 
                     //绘制结束时间
                     if (isDrawEnd)
                     {
                         ts = taskEvent.EndTime.ToString("HH:mm") + " ";
-                        g.DrawString(ts, textFont, taskEventSelectBrush, (float)(sr.Right - tsWidth - 2), (float)(sr.Top + 3));
+                        g.DrawString(ts, textFont, new SolidBrush(taskEvent.ForeColor), (float)(sr.Right), (float)(sr.Top + 3));
                     }
+                    //居中绘制标题
+                    g.DrawString(sp, textFont, taskEventSelectBrush, (float)(rcTaskTitle.Left + rcTaskTitle.Width / 2 - (Helpers.StringTools.MeasureDisplayStringWidth(g, sp, this.Font) / 2)), (float)(rcTaskTitle.Top + 3));
+                    //绘制时长
+                    g.DrawString(timeLong, textFont, taskEventSelectBrush, (float)(sr.Left + rcTaskTitle.Width), (float)(sr.Top + 3));
+                 
                 }
                 else
                 { 
                     //绘制开始时间
                     if (isDrawStart)
-                        g.DrawString(ts, textFont, new SolidBrush(taskEvent.ForeColor), (float)(sr.Left), (float)(sr.Top + 3));
-                    //居中绘制
-                    g.DrawString(sp, textFont, new SolidBrush(taskEvent.ForeColor), (float)(rcTaskTitle.Left + rcTaskTitle.Width / 2 - (Helpers.StringTools.MeasureDisplayStringWidth(g, sp, this.Font) / 2)), (float)(rcTaskTitle.Top + 3));
-                    g.DrawString(timeLong, textFont, new SolidBrush(taskEvent.ForeColor), (float)(sr.Left + sr.Width / 2 - (Helpers.StringTools.MeasureDisplayStringWidth(g, timeLong, this.Font) / 2)), (float)(sr.Top + itemheight));
-                     
+                        g.DrawString(ts, textFont, new SolidBrush(taskEvent.ForeColor), (float)(sr.Left - tsWidth-2), (float)(sr.Top + 3));
+                    //绘制完成时间 
                     if (isDrawEnd)
                     {
                         ts = taskEvent.EndTime.ToString("HH:mm") + " ";
-                        g.DrawString(ts, textFont, new SolidBrush(taskEvent.ForeColor), (float)(sr.Right - tsWidth - 2), (float)(sr.Top + 3));
+                        g.DrawString(ts, textFont, new SolidBrush(taskEvent.ForeColor), (float)(sr.Right), (float)(sr.Top + 3));
                     }
+                    //居中绘制标题
+                    g.DrawString(sp, textFont, new SolidBrush(taskEvent.ForeColor), (float)(rcTaskTitle.Left + rcTaskTitle.Width / 2 - (Helpers.StringTools.MeasureDisplayStringWidth(g, sp, this.Font) / 2)), (float)(rcTaskTitle.Top + 3));
+                    //绘制时长
+                    g.DrawString(timeLong, textFont, new SolidBrush(taskEvent.ForeColor), (float)(sr.Left + rcTaskTitle.Width), (float)(sr.Top + 3));
+                     
+                   
                 }
             }
         }
